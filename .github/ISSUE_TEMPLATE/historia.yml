@@ -1,0 +1,56 @@
+name: Historia o tarea
+description: Trabajo del backlog, escrito para que una persona o un agente lo pueda ejecutar sin más contexto.
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Escribe el issue **autocontenido**: quien lo tome (tú o un agente) no tiene acceso a Obsidian ni al proyecto de Claude.
+        Cita los IDs de requisitos (RF, RU, RNF, RES, DI, D-xx) para trazabilidad, pero copia aquí lo que importa.
+  - type: textarea
+    id: historia
+    attributes:
+      label: Historia
+      description: Como <quién>, quiero <qué>, para <para qué>. En tareas técnicas, el objetivo en una frase.
+    validations:
+      required: true
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto
+      description: Lo mínimo para entender el porqué y las reglas de negocio que aplican.
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios de aceptación
+      description: Lista verificable. Una casilla por criterio.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: fuera
+    attributes:
+      label: Fuera de alcance
+      description: Lo que este issue NO debe hacer.
+  - type: input
+    id: requisitos
+    attributes:
+      label: Requisitos relacionados
+      placeholder: RF-20, RNF-12, D-03
+  - type: textarea
+    id: dependencias
+    attributes:
+      label: Dependencias y decisiones pendientes
+  - type: dropdown
+    id: talla
+    attributes:
+      label: Talla (tiempo de Jorge para especificar y revisar)
+      options:
+        - S (~1 h)
+        - M (~2 h)
+        - L (~4 h)
+    validations:
+      required: true
