@@ -5,6 +5,8 @@
 - **Fase:** Validación y Producto
 - **Requisitos:** RNF-01 a RNF-08, RNF-12, RNF-18, RNF-21, RNF-22, D-03, D-16
 
+> **Nota (2026-10-28):** lo que este ADR decide sobre Supabase está reemplazado por [ADR-0014](0014-neon-como-base-de-datos.md) (Neon), por falta de presupuesto. El resto sigue vigente.
+
 ## Contexto
 El código lo escriben agentes a partir de issues (D-16) y la revisión humana es breve. Los tests son la forma de comprobar que un PR cumple el issue. Los minutos de CI son limitados (ADR-0010), así que la mayoría de las pruebas debe ser rápida.
 

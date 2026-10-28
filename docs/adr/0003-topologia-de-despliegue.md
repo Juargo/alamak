@@ -5,6 +5,8 @@
 - **Fase:** Validación y Producto
 - **Requisitos:** RES-15, RES-21, RES-23, RNF-07, RNF-16, RNF-24, RNF-26, D-06, D-10
 
+> **Nota (2026-10-28):** lo que este ADR decide sobre Supabase está reemplazado por [ADR-0014](0014-neon-como-base-de-datos.md) (Neon), por falta de presupuesto. El resto sigue vigente.
+
 ## Contexto
 - El presupuesto es casi cero durante la validación y ≤ US$60–80 al mes en el producto (RES-15).
 - Solo web responsive (D-06). El público está en LAS, LAN y España (RES-21); la mayoría está en Latinoamérica.

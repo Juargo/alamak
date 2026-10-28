@@ -5,6 +5,8 @@
 - **Fase:** Validación y Producto
 - **Requisitos:** RES-07, RES-12, RES-16, RNF-12, DI-01, DI-02, DI-09, DI-10, DI-11, DI-14, DI-21, D-10, D-11
 
+> **Nota (2026-10-28):** lo que este ADR decide sobre Supabase está reemplazado por [ADR-0014](0014-neon-como-base-de-datos.md) (Neon), por falta de presupuesto. El resto sigue vigente.
+
 ## Contexto
 - En la validación, el visitante **no inicia sesión** (Flujo 10): deja su correo, hace el test de tilt y paga la pre-venta.
 - El producto tiene roles (free, premium, coach, admin; DI-01) y aislamiento estricto por usuario (RNF-12, DI-14).
