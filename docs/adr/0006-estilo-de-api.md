@@ -5,6 +5,8 @@
 - **Fase:** Validación y Producto
 - **Requisitos:** RES-10, RNF-02, RNF-18, RNF-20, DI-24, DI-25
 
+> **Nota (2026-10-28):** lo que este ADR decide sobre Supabase está reemplazado por [ADR-0014](0014-neon-como-base-de-datos.md) (Neon), por falta de presupuesto. El resto sigue vigente.
+
 ## Contexto
 - La app es web y la consume solo su propio front. Hay integraciones entrantes (webhooks de pago y jobs programados) y salientes (Riot, IA, correo).
 - No hay funciones en vivo: Riot bloquea el acceso a la memoria del juego y restringe los replays (RES-10). El aviso de partida nueva llega por Web Push (DI-25).

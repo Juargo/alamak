@@ -5,6 +5,8 @@
 - **Fase:** Validación y Producto
 - **Requisitos:** RES-14, RES-15, RNF-19, RNF-20, RNF-24, RNF-25, RNF-26, DI-17, D-14
 
+> **Nota (2026-10-28):** lo que este ADR decide sobre Supabase está reemplazado por [ADR-0014](0014-neon-como-base-de-datos.md) (Neon), por falta de presupuesto. El resto sigue vigente.
+
 ## Contexto
 - Un solo desarrollador a tiempo parcial (RES-14) que debe operar el sistema sin intervención manual compleja (RNF-26).
 - Presupuesto de operación ≤ US$80 al mes hasta ~10.000 usuarios (RES-15, RNF-24), con capacidad para llegar a ~12.000 activos al mes sin rediseño (RNF-25).

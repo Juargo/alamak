@@ -5,6 +5,8 @@
 - **Fase:** Validación y Producto
 - **Requisitos:** RES-14, RNF-07, RNF-19, RNF-20, RNF-23, RNF-24, RNF-25, RNF-26, DI-17, D-14
 
+> **Nota (2026-10-28):** lo que este ADR decide sobre Supabase está reemplazado por [ADR-0014](0014-neon-como-base-de-datos.md) (Neon), por falta de presupuesto. El resto sigue vigente.
+
 ## Contexto
 El código lo escriben mayormente agentes de IA y lo revisa una sola persona en poco tiempo. Hace falta que todo sea predecible, fácil de revisar y barato de cambiar. Los picos de carga son previsibles: noches y fines de semana, el lunes del resumen y los inicios de temporada o de split.
 

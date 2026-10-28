@@ -5,6 +5,8 @@
 - **Fase:** Validación y Producto
 - **Requisitos:** RNF-09, RNF-12, RNF-13, RNF-15, RNF-18, DI-01 a DI-19, D-10, D-14
 
+> **Nota (2026-10-28):** lo que este ADR decide sobre Supabase está reemplazado por [ADR-0014](0014-neon-como-base-de-datos.md) (Neon), por falta de presupuesto. El resto sigue vigente.
+
 ## Contexto
 - Los datos son claramente relacionales: usuario → cuenta de Riot → partidas → reflexiones → hallazgos → resúmenes; suscripción; vínculo coach–alumno; consentimientos (DI-01 a DI-13).
 - Hay operaciones que deben ser atómicas: guardar una reflexión y actualizar sus hallazgos; activar un plan a partir de un webhook y registrar el evento.

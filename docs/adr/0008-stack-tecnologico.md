@@ -5,6 +5,8 @@
 - **Fase:** Validación y Producto
 - **Requisitos:** RES-08, RES-15, RES-23, RNF-04, RNF-08, RNF-10, RNF-14, RNF-23, RNF-27, D-05, D-06, D-07
 
+> **Nota (2026-10-28):** lo que este ADR decide sobre Supabase está reemplazado por [ADR-0014](0014-neon-como-base-de-datos.md) (Neon), por falta de presupuesto. El resto sigue vigente.
+
 ## Contexto
 Hace falta un stack que Jorge ya domine (TypeScript, React, Vercel) para no gastar las 2 h semanales en aprender. Debe costar ~0 y servir para la web responsive (D-06), dejando abierta la puerta a apps nativas en el futuro.
 

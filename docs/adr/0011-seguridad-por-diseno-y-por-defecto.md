@@ -5,6 +5,8 @@
 - **Fase:** Validación y Producto
 - **Requisitos:** RES-05, RES-07, RES-11, RES-12, RNF-09 a RNF-16, RNF-26, DI-11, DI-14 a DI-19, D-10
 
+> **Nota (2026-10-28):** lo que este ADR decide sobre Supabase está reemplazado por [ADR-0014](0014-neon-como-base-de-datos.md) (Neon), por falta de presupuesto. El resto sigue vigente.
+
 ## Contexto
 Las notas y el ánimo son datos sensibles (RNF-09). Rigen la Ley 21.719 desde el 1 de diciembre de 2026 (RES-11) y el RGPD (RNF-16). Hay pagos, una política estricta de Riot (RES-05, RES-07) y una sola persona para responder ante un incidente. La seguridad tiene que estar en la estructura y en los valores por defecto, no depender de recordar cosas.
 
