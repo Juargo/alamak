@@ -22,7 +22,7 @@ Qué tan bien debe funcionar el sistema, sin decidir la tecnología.
 | RNF-09 | Notas y ánimo son datos sensibles | Cifrados; solo los ve su dueño o el coach si el alumno lo autoriza | Must |
 | RNF-10 | Las notas no entrenan modelos de IA sin aceptación | Opt-in separado y desactivado por defecto | Must |
 | RNF-11 | Ningún dato se vende ni se comparte con anunciantes o para seguimiento | Declarado en la política de privacidad | Must |
-| RNF-12 | Un usuario solo ve sus propios datos | No hay forma de ver partidas de otros. En el test de tilt el visitante declara que la cuenta es suya y ve un solo dato agregado (A-34, pendiente) | Must |
+| RNF-12 | Un usuario solo ve sus propios datos | No hay forma de ver partidas de otros. En el test de tilt el visitante declara que la cuenta es suya y ve un solo dato agregado (D-17) | Must |
 | RNF-13 | Datos para contenido o métricas siempre agregados y anónimos | Ningún agregado identifica a una persona | Must |
 | RNF-14 | La IA recibe solo lo necesario | Se revisa qué sale hacia el proveedor de IA; sin identificadores innecesarios | Should |
 | RNF-29 | Ninguna clave de API en el cliente | Las llamadas a Riot y a la IA se hacen en el servidor | Must |

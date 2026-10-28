@@ -15,7 +15,7 @@
 | DI-09 | Suscripción o pre-venta | Plan, estado, región de precio, monto, fechas | Personal (sin tarjeta) |
 | DI-10 | Vínculo coach–alumno | Coach, alumno, qué se comparte, fechas de inicio y revocación | Personal |
 | DI-11 | Consentimiento | Tipo (notas, entrenamiento de IA, tutor), fecha, versión aceptada | Registro legal |
-| DI-12 | Lista de espera | Correo y región (A-37, pendiente) | Personal |
+| DI-12 | Lista de espera | Correo y región (D-20) | Personal |
 | DI-29 | Respuestas del test de tilt | Respuestas sin Riot ID, para medir H4 | Anónima |
 | DI-13 | Métricas agregadas | Indicadores H1–H4 y datos de comunidad anónimos | Anónima |
 
@@ -27,7 +27,7 @@
 | DI-15 | No se guardan datos de tarjetas; los gestiona la pasarela |
 | DI-16 | Los datos se conservan mientras exista la cuenta y se borran por completo al eliminarla; respaldos en ≤30 días |
 | DI-17 | Las partidas de Riot se guardan para no pedirlas dos veces y respetar los límites |
-| DI-18 | La lista de espera se borra a los 6 meses si la persona no se registra (A-37, pendiente) |
+| DI-18 | La lista de espera se borra a los 6 meses si la persona no se registra (D-20) |
 | DI-19 | Todo dato en contenido o marketing es agregado y anónimo |
 | DI-30 | El Riot ID del test de tilt no se guarda si el visitante no se inscribe |
 | DI-31 | Los datos de Riot no se editan a mano; solo la reflexión (A-25) |
