@@ -10,6 +10,11 @@ const url = process.env.TEST_DATABASE_URL;
 // This suite empties the table, so it only runs against a local, disposable database.
 const isLocal = url !== undefined && ["localhost", "127.0.0.1"].includes(new URL(url).hostname);
 
+// In CI the suite must run; a missing or remote URL would otherwise skip it silently.
+if (process.env.CI && !isLocal) {
+  throw new Error("CI must set TEST_DATABASE_URL to a local Postgres for integration tests");
+}
+
 describe.runIf(isLocal)("postgresWaitlistRepository (integration)", () => {
   let pool: Pool;
   let db: NodePgDatabase;
