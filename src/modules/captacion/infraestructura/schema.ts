@@ -1,7 +1,8 @@
 import { sql } from "drizzle-orm";
 import { pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { REGIONS } from "../dominio/waitlist";
 
-export const regionEnum = pgEnum("region", ["LAS", "LAN", "EUW"]);
+export const regionEnum = pgEnum("region", REGIONS);
 
 /**
  * Waitlist sign-ups. Stores only email and region (D-20, ADR-0015);
