@@ -8,11 +8,16 @@ export type JoinWaitlistState =
   | { status: "invalid"; field: "email" | "region" }
   | { status: "error" };
 
+const HONEYPOT_FIELD = "website";
+
 /** Server Action behind the waitlist form (used with useActionState). */
 export async function joinWaitlist(
   _previous: JoinWaitlistState,
   formData: FormData,
 ): Promise<JoinWaitlistState> {
+  // Honeypot: people never see the "website" field, bots fill it. Answer as if it worked.
+  if (formData.get(HONEYPOT_FIELD)) return { status: "enrolled" };
+
   try {
     const result = await enrollInWaitlist({
       email: formData.get("email"),
