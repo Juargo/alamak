@@ -39,13 +39,13 @@
 | RN-09 | Prueba gratuita de premium | 14 días, activada al tercer resumen semanal, sin pedir tarjeta (A-16) | Should | Producto |
 | RN-10 | Plan Coach (B2B) | Hasta 10 alumnos, US$12–19/mes; piloto con 2–3 coaches en la semana 5 | Should | Validación (piloto) / Producto |
 | RN-11 | Sin publicidad ni venta de datos | Sin anuncios de terceros ni datos compartidos con anunciantes | Must | Ambas |
-| RN-17 | Pre-venta del plan anual con descuento | Precio y garantía según A-35 y A-36 (pendientes, issue #2) | Should | Validación (M2) |
+| RN-17 | Pre-venta del plan anual con descuento | CLP 14.990 / US$10,99 / €17,99 el primer año, pago único; garantía hasta el 30-sep-2027 (D-18, D-19) | Should | Validación (M2) |
 
 ## Objetivos comerciales y de operación
 
 | ID | Requisito | Criterio de aceptación | Prioridad | Fase |
 |---|---|---|---|---|
-| RN-12 | Lanzar antes del inicio de la temporada 2027 | Lanzamiento público en enero de 2027 o antes; no lanzar en agosto. **En riesgo**: ver C-16 | Should | Producto |
+| RN-12 | Lanzar antes del inicio de la temporada 2027 | Lanzamiento objetivo el 30-jun-2027, con beta en el 2º trimestre (D-21); no lanzar en agosto | Should | Producto |
 | RN-13 | Margen bruto alto | >80% después de comisiones | Should | Producto |
 | RN-14 | Meta de referencia al mes 12 | Base ~US$600 de MRR (~240 suscriptores); pesimista ~US$72; optimista ~US$3.640 | Could | Producto |
 | RN-15 | Adquisición sin pago hasta validar retención | Discord hispanos, coaches, micro-creadores y contenido corto antes de cualquier anuncio | Must | Ambas |

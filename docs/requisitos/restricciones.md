@@ -40,7 +40,7 @@ Condiciones que no se negocian.
 | ID | Restricción | Consecuencia |
 |---|---|---|
 | RES-18 | Validación antes de construir el producto completo | El producto completo solo tras el GO |
-| RES-19 | Lanzamiento antes del inicio de la temporada 2027 (enero) | **En conflicto** con el ritmo de 2 h/semana y con A-36 (garantía hasta el 31-mar-2027); ver C-16 |
+| RES-19 | Lanzamiento antes del inicio de la temporada 2027 (enero) | Reemplazada por D-21: lanzamiento objetivo el 30-jun-2027 |
 | RES-20 | Evitar lanzar en agosto | Campañas al inicio de temporada y de splits |
 
 ## Mercado y alcance
