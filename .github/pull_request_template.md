@@ -1,7 +1,7 @@
 ## Qué cambia
 <!-- Una o dos frases. -->
 
-Cierra #
+Closes #
 
 ## Cómo se probó
 - [ ] 
