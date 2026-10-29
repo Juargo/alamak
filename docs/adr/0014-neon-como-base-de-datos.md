@@ -22,7 +22,7 @@ Reemplaza todo lo que ADR-0002, 0003, 0004, 0005, 0006, 0007, 0008, 0010, 0011 y
    | Ambiente | Base de datos |
    |---|---|
    | Local | Rama de Neon de desarrollo (`neon checkout dev --create`) |
-   | Preview (por PR) | Una rama de Neon por PR, creada desde `production` |
+   | Preview (por PR) | ~~Una rama de Neon por PR, creada desde `production`~~ Rama fija `preview` (ADR-0016) |
    | Producción | Rama `production` |
 
 5. **Aislamiento entre usuarios:** sin Supabase Auth no existe `auth.uid()`. RLS se mantiene como defensa en profundidad, con la identidad del usuario fijada por transacción (`set_config`) desde el servidor. El diseño se cierra en el ADR que reemplace la autenticación, antes de M3.
