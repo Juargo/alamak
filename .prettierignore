@@ -7,3 +7,5 @@ docs
 .atl
 *.md
 drizzle/meta
+test-results
+playwright-report
