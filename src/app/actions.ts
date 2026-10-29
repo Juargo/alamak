@@ -2,11 +2,14 @@
 
 import { enrollInWaitlist } from "@/modules/captacion";
 
+/** What the person submitted, sent back so the form shows it again after the action. */
+export type WaitlistValues = { email: string; region: string };
+
 export type JoinWaitlistState =
   | { status: "idle" }
-  | { status: "enrolled" }
-  | { status: "invalid"; field: "email" | "region" }
-  | { status: "error" };
+  | { status: "enrolled"; email: string }
+  | { status: "invalid"; field: "email" | "region"; values: WaitlistValues }
+  | { status: "error"; values: WaitlistValues };
 
 const HONEYPOT_FIELD = "website";
 
@@ -15,20 +18,25 @@ export async function joinWaitlist(
   _previous: JoinWaitlistState,
   formData: FormData,
 ): Promise<JoinWaitlistState> {
+  const values = { email: text(formData, "email"), region: text(formData, "region") };
+
   // Honeypot: people never see the "website" field, bots fill it. Answer as if it worked.
-  if (formData.get(HONEYPOT_FIELD)) return { status: "enrolled" };
+  if (formData.get(HONEYPOT_FIELD)) return { status: "enrolled", email: values.email.trim() };
 
   try {
-    const result = await enrollInWaitlist({
-      email: formData.get("email"),
-      region: formData.get("region"),
-    });
+    const result = await enrollInWaitlist(values);
+    if (result.status === "invalid") return { ...result, values };
     // New and repeated emails get the same response, so the form cannot reveal who is on
     // the list; only the confirmation email tells the owner they were already enrolled.
-    return result.status === "already-enrolled" ? { status: "enrolled" } : result;
+    return { status: "enrolled", email: values.email.trim() };
   } catch (error) {
     // Never log the email: it is personal data (ADR-0011).
     console.error("joinWaitlist failed", error instanceof Error ? error.message : error);
-    return { status: "error" };
+    return { status: "error", values };
   }
+}
+
+function text(formData: FormData, name: string): string {
+  const value = formData.get(name);
+  return typeof value === "string" ? value : "";
 }

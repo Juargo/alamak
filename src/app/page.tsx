@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { WaitlistFormFallback, WaitlistFormWithRegion } from "./_components/waitlist-section";
+import { WaitlistFormSkeleton, WaitlistFormWithRegion } from "./_components/waitlist-section";
 
 const container = "mx-auto w-full max-w-[1200px] px-4 md:px-8";
 
@@ -127,7 +127,7 @@ export default function Home() {
               Te avisamos cuando empiece la beta. Es gratis y solo te escribimos para eso.
             </p>
           </div>
-          <Suspense fallback={<WaitlistFormFallback />}>
+          <Suspense fallback={<WaitlistFormSkeleton />}>
             <WaitlistFormWithRegion />
           </Suspense>
         </div>

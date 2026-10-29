@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { joinWaitlist, type JoinWaitlistState } from "../actions";
 
 const ERROR_MESSAGES = {
@@ -21,13 +21,12 @@ export function WaitlistForm({ regions, defaultRegion }: Props) {
   const [state, formAction, pending] = useActionState<JoinWaitlistState, FormData>(joinWaitlist, {
     status: "idle",
   });
-  const [email, setEmail] = useState("");
-  // Controlled so React's form reset after the action keeps the chosen region.
-  const [region, setRegion] = useState(defaultRegion);
-
-  if (state.status === "enrolled") return <Enrolled email={email} />;
+  if (state.status === "enrolled") return <Enrolled email={state.email} />;
 
   const invalidField = state.status === "invalid" ? state.field : undefined;
+  // Uncontrolled fields seeded from the action's echo: React resets the form after every
+  // action, and the page may not be hydrated yet when the person submits.
+  const values = "values" in state ? state.values : { email: "", region: defaultRegion };
 
   return (
     <form action={formAction} className="flex w-full flex-col gap-3 md:w-[480px]" noValidate>
@@ -44,8 +43,7 @@ export function WaitlistForm({ regions, defaultRegion }: Props) {
             required
             maxLength={254}
             placeholder="tu@correo.com"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            defaultValue={values.email}
             aria-invalid={invalidField === "email"}
             aria-describedby={invalidField === "email" ? "waitlist-email-error" : undefined}
             className={`${fieldBox} ${invalidField === "email" ? "border-estado-derrota" : "border-borde-fuerte"}`}
@@ -56,11 +54,12 @@ export function WaitlistForm({ regions, defaultRegion }: Props) {
             Región
           </label>
           <div className="relative">
+            {/* React ignores a changed defaultValue on a mounted select; the key remounts it. */}
             <select
+              key={values.region}
               id="waitlist-region"
               name="region"
-              value={region}
-              onChange={(event) => setRegion(event.target.value)}
+              defaultValue={values.region}
               aria-invalid={invalidField === "region"}
               aria-describedby={invalidField === "region" ? "waitlist-region-error" : undefined}
               className={`${fieldBox} appearance-none pr-9 ${invalidField === "region" ? "border-estado-derrota" : "border-borde-fuerte"}`}
@@ -125,7 +124,7 @@ function Enrolled({ email }: { email: string }) {
       </div>
       <p className="font-display text-titulo-l font-bold">Listo, estás en la lista</p>
       <p className="text-cuerpo-m text-texto-secundario">
-        Te enviamos un correo a <span className="break-all">{email.trim()}</span> para confirmar tu
+        Te enviamos un correo a <span className="break-all">{email}</span> para confirmar tu
         inscripción. Te escribimos de nuevo cuando empiece la beta.
       </p>
       <a

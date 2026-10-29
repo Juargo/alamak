@@ -12,7 +12,25 @@ export async function WaitlistFormWithRegion() {
   return <WaitlistForm regions={REGIONS} defaultRegion={defaultRegion} />;
 }
 
-/** Rendered while the request headers stream in; same form with the default region. */
-export function WaitlistFormFallback() {
-  return <WaitlistForm regions={REGIONS} defaultRegion="LAS" />;
+/**
+ * Placeholder with the form's size while the request headers stream in. It has no fields on
+ * purpose: anything typed into a fallback form is lost when the real one replaces it.
+ */
+export function WaitlistFormSkeleton() {
+  return (
+    <div aria-hidden="true" className="flex w-full flex-col gap-3 md:w-[480px]">
+      <div className="flex flex-col gap-3 md:flex-row md:items-end">
+        <div className="flex flex-1 flex-col gap-1.5">
+          <span className="h-4 w-14 rounded bg-borde-defecto" />
+          <span className="h-12 rounded-md bg-fondo-superficie" />
+        </div>
+        <div className="flex flex-col gap-1.5 md:w-[120px]">
+          <span className="h-4 w-14 rounded bg-borde-defecto" />
+          <span className="h-12 rounded-md bg-fondo-superficie" />
+        </div>
+      </div>
+      <span className="h-11 rounded-md bg-marca-principal opacity-70" />
+      <span className="h-4 w-56 rounded bg-borde-defecto" />
+    </div>
+  );
 }
