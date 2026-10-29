@@ -22,6 +22,8 @@ export function WaitlistForm({ regions, defaultRegion }: Props) {
     status: "idle",
   });
   const [email, setEmail] = useState("");
+  // Controlled so React's form reset after the action keeps the chosen region.
+  const [region, setRegion] = useState(defaultRegion);
 
   if (state.status === "enrolled") return <Enrolled email={email} />;
 
@@ -57,7 +59,8 @@ export function WaitlistForm({ regions, defaultRegion }: Props) {
             <select
               id="waitlist-region"
               name="region"
-              defaultValue={defaultRegion}
+              value={region}
+              onChange={(event) => setRegion(event.target.value)}
               aria-invalid={invalidField === "region"}
               aria-describedby={invalidField === "region" ? "waitlist-region-error" : undefined}
               className={`${fieldBox} appearance-none pr-9 ${invalidField === "region" ? "border-estado-derrota" : "border-borde-fuerte"}`}
