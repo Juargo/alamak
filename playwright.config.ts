@@ -1,9 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
+import { testDatabaseUrl } from "./e2e/db";
 
 const port = 3200;
 
 // The app writes sign-ups to this database, so E2E only runs against a local, disposable one.
-const databaseUrl = process.env.TEST_DATABASE_URL;
+// Checked here too: the web server may start before the global setup runs.
+const databaseUrl = testDatabaseUrl();
 
 // E2E covers the Must flows on desktop and on iPhone and Android viewports (ADR-0012).
 // Every project runs on Chromium to keep CI minutes low; the viewports differ.
@@ -27,6 +29,6 @@ export default defineConfig({
     url: `http://127.0.0.1:${port}`,
     timeout: 180_000,
     reuseExistingServer: false,
-    env: { DATABASE_URL: databaseUrl ?? "" },
+    env: { DATABASE_URL: databaseUrl },
   },
 });
