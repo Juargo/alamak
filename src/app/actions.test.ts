@@ -26,6 +26,14 @@ describe("joinWaitlist", () => {
     expect(enrollInWaitlist).toHaveBeenCalledWith({ email: "ana@example.com", region: "LAN" });
   });
 
+  it("#4 CA-4: an email already on the list gets the same response as a new one", async () => {
+    enrollInWaitlist.mockResolvedValue({ status: "already-enrolled" });
+
+    await expect(
+      joinWaitlist({ status: "idle" }, form({ email: "ana@example.com", region: "LAN" })),
+    ).resolves.toEqual({ status: "enrolled" });
+  });
+
   it("#4 CA-4: when the database fails it returns an error state and does not log the email", async () => {
     enrollInWaitlist.mockRejectedValue(new Error("connection refused"));
 
