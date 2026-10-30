@@ -22,6 +22,7 @@ Un archivo por decisión: `NNNN-titulo-corto.md`, basado en [`0000-plantilla.md`
 | [0013](0013-kpis-metricas-y-logs.md) | KPIs y logs | KPIs de H1–H5 en PostHog UE; logs JSON sin PII; `job_run` y `audit_log`; alertas por correo | Aceptado |
 | [0014](0014-neon-como-base-de-datos.md) | Base de datos | Postgres en Neon (reemplaza a Supabase en todos los ADR); `pg` + pool con Fluid compute; región Ohio hasta #7 | Aceptado |
 | [0015](0015-decisiones-de-captacion-y-pre-venta.md) | Captación y pre-venta | Test con "Esta cuenta es mía" y un dato agregado; pre-venta CLP 14.990 / US$10,99 / €17,99; garantía hasta el 30-sep-2027; lista de espera solo correo y región; lanzamiento 30-jun-2027 | Aceptado |
+| [0016](0016-drizzle-y-migraciones.md) | Drizzle y migraciones | Esquema y consultas con Drizzle; migraciones SQL en `drizzle/` aplicadas por `migrate.yml`; Preview usa la rama fija `preview` de Neon | Aceptado |
 
 ## Pendientes que abren o cierran ADRs
 - [ ] Verificar las condiciones de Lemon Squeezy para un vendedor en Chile (ADR-0009) antes del issue #9.

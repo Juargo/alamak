@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793290754085,
+      "tag": "0000_crear_lista_espera",
+      "breakpoints": true
+    }
+  ]
+}
