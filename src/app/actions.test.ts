@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const enrollInWaitlist = vi.fn();
-vi.mock("@/modules/captacion", async () => ({
-  enrollInWaitlist,
-  isRegion: (await import("@/modules/captacion/dominio/waitlist")).isRegion,
-}));
+vi.mock("@/modules/captacion", () => ({ enrollInWaitlist }));
 
 const { joinWaitlist } = await import("./actions");
 
@@ -21,7 +18,7 @@ describe("joinWaitlist", () => {
   });
 
   it("#4 CA-3: passes the form's email and region to the enrollment", async () => {
-    enrollInWaitlist.mockResolvedValue({ status: "enrolled" });
+    enrollInWaitlist.mockResolvedValue({ status: "enrolled", region: "LAN" });
 
     await expect(
       joinWaitlist({ status: "idle" }, form({ email: "ana@example.com", region: "LAN" })),
@@ -30,12 +27,12 @@ describe("joinWaitlist", () => {
   });
 
   it("#4 CA-4: an email already on the list gets the same response as a new one", async () => {
-    enrollInWaitlist.mockResolvedValue({ status: "enrolled" });
+    enrollInWaitlist.mockResolvedValue({ status: "enrolled", region: "LAN" });
     const fresh = await joinWaitlist(
       { status: "idle" },
       form({ email: "ana@example.com", region: "LAN" }),
     );
-    enrollInWaitlist.mockResolvedValue({ status: "already-enrolled" });
+    enrollInWaitlist.mockResolvedValue({ status: "already-enrolled", region: "LAN" });
     const repeated = await joinWaitlist(
       { status: "idle" },
       form({ email: "ana@example.com", region: "LAN" }),

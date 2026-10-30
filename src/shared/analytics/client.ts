@@ -12,7 +12,7 @@ type Events = {
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com";
 
-/** Starts cookieless analytics in the browser; without a key it stays off (local, CI). */
+/** Starts cookieless analytics in the browser; without a key it stays off. */
 export function initAnalytics() {
   if (!key) return;
   posthog.init(key, {

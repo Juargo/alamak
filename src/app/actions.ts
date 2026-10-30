@@ -1,6 +1,6 @@
 "use server";
 
-import { enrollInWaitlist, isRegion, type Region } from "@/modules/captacion";
+import { enrollInWaitlist, type Region } from "@/modules/captacion";
 
 /** What the person submitted, sent back so the form shows it again after the action. */
 export type WaitlistValues = { email: string; region: string };
@@ -30,11 +30,7 @@ export async function joinWaitlist(
     if (result.status === "invalid") return { ...result, values };
     // New and repeated emails get the same response, so the form cannot reveal who is on
     // the list; only the confirmation email tells the owner they were already enrolled.
-    return {
-      status: "enrolled",
-      email,
-      region: isRegion(values.region) ? values.region : null,
-    };
+    return { status: "enrolled", email, region: result.region };
   } catch (error) {
     // Never log the email: it is personal data (ADR-0011).
     console.error("joinWaitlist failed", error instanceof Error ? error.message : error);

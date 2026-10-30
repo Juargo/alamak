@@ -1,4 +1,4 @@
-import { parseWaitlistSignup, type WaitlistSignup } from "../dominio/waitlist";
+import { parseWaitlistSignup, type Region, type WaitlistSignup } from "../dominio/waitlist";
 
 export interface WaitlistRepository {
   /** Stores the sign-up unless the email is already on the list. */
@@ -6,8 +6,8 @@ export interface WaitlistRepository {
 }
 
 export type EnrollmentResult =
-  | { status: "enrolled" }
-  | { status: "already-enrolled" }
+  | { status: "enrolled"; region: Region }
+  | { status: "already-enrolled"; region: Region }
   | { status: "invalid"; field: "email" | "region" };
 
 export function enrollInWaitlist(deps: { repository: WaitlistRepository }) {
@@ -16,6 +16,9 @@ export function enrollInWaitlist(deps: { repository: WaitlistRepository }) {
     if (!parsed.ok) return { status: "invalid", field: parsed.field };
 
     const outcome = await deps.repository.add(parsed.signup);
-    return outcome === "created" ? { status: "enrolled" } : { status: "already-enrolled" };
+    const { region } = parsed.signup;
+    return outcome === "created"
+      ? { status: "enrolled", region }
+      : { status: "already-enrolled", region };
   };
 }

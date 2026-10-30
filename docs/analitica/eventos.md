@@ -6,7 +6,7 @@ Analítica de producto con PostHog Cloud UE (ADR-0013). Todo evento nuevo se agr
 - Sin cookies ni almacenamiento en el navegador (`cookieless_mode: "always"`), así que la landing no necesita banner de cookies.
 - Sin perfiles de persona, sin autocaptura, sin grabación de sesiones.
 - **Prohibido enviar:** correo, Riot ID, texto de notas, ánimo individual, IP o cualquier identificador directo.
-- Sin `NEXT_PUBLIC_POSTHOG_KEY` la analítica queda apagada (desarrollo local y CI).
+- Sin `NEXT_PUBLIC_POSTHOG_KEY` la analítica queda apagada (desarrollo local y el job `check` de CI). Los E2E la encienden con una clave falsa apuntada a un puerto local; solo `e2e/analytics.spec.ts` intercepta esas llamadas.
 
 ## Eventos
 | Evento | Cuándo | Propiedades | Issue |

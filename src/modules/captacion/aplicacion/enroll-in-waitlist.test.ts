@@ -22,6 +22,7 @@ describe("enrollInWaitlist", () => {
 
     await expect(enroll({ email: "ana@example.com", region: "LAN" })).resolves.toEqual({
       status: "enrolled",
+      region: "LAN",
     });
     expect(repository.entries).toEqual([{ email: "ana@example.com", region: "LAN" }]);
   });
@@ -33,6 +34,7 @@ describe("enrollInWaitlist", () => {
 
     await expect(enroll({ email: " ANA@example.com", region: "EUW" })).resolves.toEqual({
       status: "already-enrolled",
+      region: "EUW",
     });
     expect(repository.entries).toEqual([{ email: "ana@example.com", region: "LAN" }]);
   });

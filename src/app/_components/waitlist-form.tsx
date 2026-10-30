@@ -22,10 +22,12 @@ export function WaitlistForm({ regions, defaultRegion }: Props) {
   const [state, formAction, pending] = useActionState<JoinWaitlistState, FormData>(joinWaitlist, {
     status: "idle",
   });
-  const enrolledRegion = state.status === "enrolled" ? state.region : null;
+  // One event per successful submission: each action returns a new state object.
   useEffect(() => {
-    if (enrolledRegion) trackEvent("lista_espera_inscrito", { region: enrolledRegion });
-  }, [state, enrolledRegion]);
+    if (state.status === "enrolled" && state.region) {
+      trackEvent("lista_espera_inscrito", { region: state.region });
+    }
+  }, [state]);
 
   if (state.status === "enrolled") return <Enrolled email={state.email} />;
 
