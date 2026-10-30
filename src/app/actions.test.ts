@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const enrollInWaitlist = vi.fn();
-vi.mock("@/modules/captacion", () => ({ enrollInWaitlist }));
+vi.mock("@/modules/captacion", async () => ({
+  enrollInWaitlist,
+  isRegion: (await import("@/modules/captacion/dominio/waitlist")).isRegion,
+}));
 
 const { joinWaitlist } = await import("./actions");
 
@@ -22,7 +25,7 @@ describe("joinWaitlist", () => {
 
     await expect(
       joinWaitlist({ status: "idle" }, form({ email: "ana@example.com", region: "LAN" })),
-    ).resolves.toEqual({ status: "enrolled", email: "ana@example.com" });
+    ).resolves.toEqual({ status: "enrolled", email: "ana@example.com", region: "LAN" });
     expect(enrollInWaitlist).toHaveBeenCalledWith({ email: "ana@example.com", region: "LAN" });
   });
 
@@ -59,7 +62,7 @@ describe("joinWaitlist", () => {
         { status: "idle" },
         form({ email: "bot@example.com", region: "LAN", website: "https://spam.example" }),
       ),
-    ).resolves.toEqual({ status: "enrolled", email: "bot@example.com" });
+    ).resolves.toEqual({ status: "enrolled", email: "bot@example.com", region: null });
     expect(enrollInWaitlist).not.toHaveBeenCalled();
   });
 

@@ -6,7 +6,7 @@ import {
 } from "./aplicacion/enroll-in-waitlist";
 import { postgresWaitlistRepository } from "./infraestructura/postgres-waitlist-repository";
 
-export { REGIONS, type Region } from "./dominio/waitlist";
+export { isRegion, REGIONS, type Region } from "./dominio/waitlist";
 export { preselectRegion } from "./dominio/region-preselection";
 export type { EnrollmentResult } from "./aplicacion/enroll-in-waitlist";
 
