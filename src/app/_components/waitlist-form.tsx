@@ -124,8 +124,8 @@ function Enrolled({ email }: { email: string }) {
       </div>
       <p className="font-display text-titulo-l font-bold">Listo, estás en la lista</p>
       <p className="text-cuerpo-m text-texto-secundario">
-        Te enviamos un correo a <span className="break-all">{email}</span> para confirmar tu
-        inscripción. Te escribimos de nuevo cuando empiece la beta.
+        {/* T4 restores the confirmation-email copy once that email is sent. */}
+        Te escribiremos a <span className="break-all">{email}</span> cuando empiece la beta.
       </p>
       <a
         href="#inicio"
@@ -133,9 +133,6 @@ function Enrolled({ email }: { email: string }) {
       >
         Volver al inicio
       </a>
-      <p className="text-nota font-medium text-texto-secundario">
-        ¿No te llegó? Revisa la carpeta de spam.
-      </p>
     </div>
   );
 }
