@@ -1,4 +1,10 @@
-import { pickChallengeIcon, secondsUntilNextCheck } from "../dominio/verification";
+import {
+  CHALLENGE_TTL_SECONDS,
+  CHECK_INTERVAL_SECONDS,
+  isChallengeExpired,
+  pickChallengeIcon,
+  secondsUntilNextCheck,
+} from "../dominio/verification";
 import type { RiotAccountRepository } from "./repositories";
 import { isRiotFailure, type RiotApi } from "./riot-port";
 
@@ -13,6 +19,7 @@ export type CheckResult =
   | { status: "mismatch"; currentIconId: number | null }
   | { status: "too-soon"; retryAfterSeconds: number }
   | { status: "claimed" }
+  | { status: "expired" }
   | { status: "not-started" }
   | { status: "not-linked" }
   | { status: "riot-unavailable" };
@@ -30,25 +37,35 @@ async function fromRiot<T>(call: () => Promise<T>): Promise<T | "riot-unavailabl
 
 /**
  * Gives the player the icon to set (RF-03, D-11): a default one different from their
- * current icon, so setting it proves they control the account. Idempotent.
+ * current icon, so setting it proves they control the account. It lasts 15 minutes; after
+ * that a new one is picked. Concurrent calls agree on the same icon.
  */
 export function startOwnershipCheck(deps: {
   accounts: RiotAccountRepository;
   riot: RiotApi;
   random?: () => number;
+  now?: () => Date;
 }) {
+  const now = deps.now ?? (() => new Date());
   return async (userId: string): Promise<StartResult> => {
     const account = await deps.accounts.findByUser(userId);
     if (!account) return { status: "not-linked" };
     if (account.verified) return { status: "verified" };
-    if (account.challengeIconId !== null)
+    const at = now();
+    if (account.challengeIconId !== null && !isChallengeExpired(account.challengeSetAt, at)) {
       return { status: "pending", iconId: account.challengeIconId };
+    }
 
     const current = await fromRiot(() => deps.riot.profileIconId(account.puuid, account.region));
-    if (current === "riot-unavailable") return { status: "riot-unavailable" };
-    const iconId = pickChallengeIcon(current, deps.random);
-    await deps.accounts.setChallengeIcon(userId, iconId);
-    return { status: "pending", iconId };
+    // Without the current icon a pick could equal it and prove nothing.
+    if (current === "riot-unavailable" || current === null) return { status: "riot-unavailable" };
+    const iconId = await deps.accounts.setChallengeIcon(
+      userId,
+      pickChallengeIcon(current, deps.random),
+      at,
+      CHALLENGE_TTL_SECONDS,
+    );
+    return iconId === null ? { status: "verified" } : { status: "pending", iconId };
   };
 }
 
@@ -66,9 +83,11 @@ export function checkOwnership(deps: {
     if (account.challengeIconId === null) return { status: "not-started" };
 
     const at = now();
-    const wait = secondsUntilNextCheck(account.lastCheckAt, at);
-    if (wait > 0) return { status: "too-soon", retryAfterSeconds: wait };
-    await deps.accounts.recordCheck(userId, at);
+    if (isChallengeExpired(account.challengeSetAt, at)) return { status: "expired" };
+    if (!(await deps.accounts.tryRecordCheck(userId, at, CHECK_INTERVAL_SECONDS))) {
+      const wait = secondsUntilNextCheck(account.lastCheckAt, at);
+      return { status: "too-soon", retryAfterSeconds: Math.max(wait, 1) };
+    }
 
     const current = await fromRiot(() => deps.riot.profileIconId(account.puuid, account.region));
     if (current === "riot-unavailable") return { status: "riot-unavailable" };

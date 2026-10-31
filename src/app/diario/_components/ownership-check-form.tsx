@@ -9,6 +9,8 @@ function message(state: OwnershipState): string | null {
       return "Todavía vemos otro ícono en tu cuenta. Riot puede tardar un momento en mostrar el cambio; vuelve a intentarlo en unos segundos.";
     case "too-soon":
       return `Espera ${state.retryAfterSeconds} segundos antes de volver a comprobar.`;
+    case "expired":
+      return "Pasaron más de 15 minutos, así que te pedimos otro ícono. Ponlo y vuelve a presionar «Ya lo cambié».";
     case "claimed":
       return "Esta cuenta de Riot ya está comprobada en otra cuenta de Alamak. Si es tuya, escríbenos.";
     case "riot-unavailable":

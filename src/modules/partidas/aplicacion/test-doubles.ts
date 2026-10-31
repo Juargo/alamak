@@ -21,16 +21,26 @@ export function inMemoryAccounts(): RiotAccountRepository & { verify(userId: str
         id: `account-${userId}`,
         verified: false,
         challengeIconId: null,
+        challengeSetAt: null,
         lastCheckAt: null,
       };
       byUser.set(userId, linked);
       return { status: "linked", account: linked };
     },
-    async setChallengeIcon(userId, iconId) {
-      if (!byUser.get(userId)?.verified) update(userId, { challengeIconId: iconId });
+    async setChallengeIcon(userId, iconId, at, ttlSeconds) {
+      const account = byUser.get(userId);
+      if (!account || account.verified) return null;
+      const expired =
+        !account.challengeSetAt ||
+        at.getTime() - account.challengeSetAt.getTime() >= ttlSeconds * 1000;
+      if (expired) update(userId, { challengeIconId: iconId, challengeSetAt: at });
+      return byUser.get(userId)?.challengeIconId ?? null;
     },
-    async recordCheck(userId, at) {
+    async tryRecordCheck(userId, at, intervalSeconds) {
+      const last = byUser.get(userId)?.lastCheckAt;
+      if (last && at.getTime() - last.getTime() < intervalSeconds * 1000) return false;
       update(userId, { lastCheckAt: at });
+      return true;
     },
     async markVerified(userId) {
       const account = byUser.get(userId);

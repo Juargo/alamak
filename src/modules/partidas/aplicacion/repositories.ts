@@ -9,6 +9,7 @@ export type LinkedAccount = RiotAccount & {
   verified: boolean;
   /** Icon the player must set to prove ownership (#26), once a check has started. */
   challengeIconId: number | null;
+  challengeSetAt: Date | null;
   lastCheckAt: Date | null;
 };
 
@@ -20,8 +21,18 @@ export interface RiotAccountRepository {
     userId: string,
     account: RiotAccount & { region: Region },
   ): Promise<{ status: "linked"; account: LinkedAccount } | { status: "already-linked" }>;
-  setChallengeIcon(userId: string, iconId: number): Promise<void>;
-  recordCheck(userId: string, at: Date): Promise<void>;
+  /**
+   * Stores the icon to set unless an unexpired one exists (concurrent tabs keep the first),
+   * and returns the icon in force. Null when the account is verified or missing.
+   */
+  setChallengeIcon(
+    userId: string,
+    iconId: number,
+    at: Date,
+    ttlSeconds: number,
+  ): Promise<number | null>;
+  /** Records a check unless one happened in the last `intervalSeconds`; false when too soon. */
+  tryRecordCheck(userId: string, at: Date, intervalSeconds: number): Promise<boolean>;
   /** "claimed" when another player already verified the same Riot account. */
   markVerified(userId: string, at: Date): Promise<"verified" | "claimed">;
 }

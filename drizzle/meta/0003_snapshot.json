@@ -1,5 +1,5 @@
 {
-  "id": "47f1ea2b-0e89-4033-a813-b16d41e480de",
+  "id": "d8a6f561-596b-40d7-b093-62750b8d307a",
   "prevId": "28890e1c-5ad4-4e89-875c-f32c31adb17f",
   "version": "7",
   "dialect": "postgresql",
@@ -513,6 +513,12 @@
         "challenge_icon_id": {
           "name": "challenge_icon_id",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "challenge_set_at": {
+          "name": "challenge_set_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },

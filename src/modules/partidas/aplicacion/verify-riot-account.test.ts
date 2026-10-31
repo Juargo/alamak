@@ -27,6 +27,30 @@ describe("startOwnershipCheck", () => {
     expect(riot.calls.filter((call) => call.method === "profileIconId")).toHaveLength(1);
   });
 
+  it("#26 picks a new icon once the requested one expired", async () => {
+    const { accounts, riot } = await linkedAna(7);
+    let now = T0;
+    let draw = 0;
+    const start = startOwnershipCheck({ accounts, riot, random: () => draw, now: () => now });
+    const first = await start("user-ana");
+
+    now = new Date(T0.getTime() + 15 * 60 * 1000);
+    draw = 0.99;
+    const second = await start("user-ana");
+
+    expect(first).toEqual({ status: "pending", iconId: 0 });
+    expect(second).toEqual({ status: "pending", iconId: 28 });
+  });
+
+  it("#26 reports Riot as unavailable when it cannot read the current icon", async () => {
+    const { accounts } = await linkedAna();
+    const riot = riotWith({ accounts: [ANA], icons: {} });
+
+    expect(await startOwnershipCheck({ accounts, riot })("user-ana")).toEqual({
+      status: "riot-unavailable",
+    });
+  });
+
   it("#26 says the account is already verified", async () => {
     const { accounts, riot } = await linkedAna();
     accounts.verify("user-ana");
@@ -63,7 +87,7 @@ describe("startOwnershipCheck", () => {
 describe("checkOwnership", () => {
   async function challenged(currentIcon: number) {
     const { accounts, riot } = await linkedAna(currentIcon);
-    await accounts.setChallengeIcon("user-ana", 3);
+    await accounts.setChallengeIcon("user-ana", 3, T0, 900);
     let now = T0;
     const check = checkOwnership({ accounts, riot, now: () => now });
     return {
@@ -106,11 +130,28 @@ describe("checkOwnership", () => {
     const { accounts, riot } = await linkedAna(3);
     await accounts.link("user-beto", { ...ANA, region: "LAS" });
     accounts.verify("user-beto");
-    await accounts.setChallengeIcon("user-ana", 3);
+    await accounts.setChallengeIcon("user-ana", 3, T0, 900);
 
     expect(await checkOwnership({ accounts, riot, now: () => T0 })("user-ana")).toEqual({
       status: "claimed",
     });
+  });
+
+  it("#26 a requested icon expires after 15 minutes and must be requested again", async () => {
+    const { check, advance } = await challenged(3);
+
+    advance(15 * 60);
+
+    expect(await check("user-ana")).toEqual({ status: "expired" });
+  });
+
+  it("#26 S3 parallel checks pass the limit only once", async () => {
+    const { check, riot } = await challenged(7);
+
+    const results = await Promise.all([check("user-ana"), check("user-ana"), check("user-ana")]);
+
+    expect(results.filter((result) => result.status === "mismatch")).toHaveLength(1);
+    expect(riot.calls.filter((call) => call.method === "profileIconId")).toHaveLength(1);
   });
 
   it("#26 needs a started check first", async () => {
@@ -123,7 +164,7 @@ describe("checkOwnership", () => {
 
   it("#26 reports Riot as unavailable and counts the attempt", async () => {
     const { accounts } = await linkedAna();
-    await accounts.setChallengeIcon("user-ana", 3);
+    await accounts.setChallengeIcon("user-ana", 3, T0, 900);
     const riot = {
       ...riotWith({ accounts: [ANA] }),
       profileIconId: vi.fn().mockRejectedValue(new RiotUnavailableError("down")),

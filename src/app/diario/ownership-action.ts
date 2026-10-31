@@ -1,16 +1,16 @@
 "use server";
 
-import { after } from "next/server";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { DIARY_PATH, requireUser } from "@/modules/cuentas";
-import { checkOwnership, importRecentMatches } from "@/modules/partidas";
+import { checkOwnership } from "@/modules/partidas";
 
 export type OwnershipState =
   | { status: "idle" }
-  | { status: "mismatch" | "claimed" | "riot-unavailable" }
+  | { status: "mismatch" | "claimed" | "riot-unavailable" | "expired" }
   | { status: "too-soon"; retryAfterSeconds: number };
 
-/** "Ya lo cambié": checks the icon; once verified, imports the games after responding. */
+/** "Ya lo cambié": checks the icon; the diary then imports the games of a verified account. */
 export async function checkOwnershipAction(): Promise<OwnershipState> {
   const user = await requireUser();
   let result;
@@ -22,13 +22,11 @@ export async function checkOwnershipAction(): Promise<OwnershipState> {
   }
   switch (result.status) {
     case "verified":
-      after(async () => {
-        const outcome = await importRecentMatches(user.id).catch((error: unknown) => ({
-          status: `error: ${String(error)}`,
-        }));
-        console.info("first import after verifying", { status: outcome.status });
-      });
       redirect(`${DIARY_PATH}?comprobada=1`);
+    case "expired":
+      // The page picks and shows a new icon.
+      revalidatePath(DIARY_PATH);
+      return { status: "expired" };
     case "too-soon":
       return { status: "too-soon", retryAfterSeconds: result.retryAfterSeconds };
     case "mismatch":

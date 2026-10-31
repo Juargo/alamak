@@ -103,9 +103,10 @@ const card = "flex flex-col gap-4 rounded-lg border border-borde-defecto bg-fond
 
 /** Step 2 (#26): the player sets a given icon so Riot confirms the account is theirs. */
 async function OwnershipCheck({ account, userId }: { account: LinkedAccount; userId: string }) {
-  const check = await startOwnershipCheck(userId).catch(() => ({
-    status: "riot-unavailable" as const,
-  }));
+  const check = await startOwnershipCheck(userId).catch((error: unknown) => {
+    console.error("starting the ownership check failed", { error: String(error) });
+    return { status: "riot-unavailable" as const };
+  });
   const iconSrc = check.status === "pending" ? await profileIconImage(check.iconId) : null;
   return (
     <section aria-labelledby="ownership-title" className={card}>
@@ -154,8 +155,14 @@ async function VerifiedRiotAccount({
   userId: string;
   justVerified: boolean;
 }) {
-  // Idempotent: completes an import paused by Riot's rate limit (automatic imports: #27).
-  after(() => importRecentMatches(userId).catch(() => undefined));
+  // The first import right after verifying, and the resume of one paused by Riot's rate
+  // limit. Idempotent (automatic imports: #27).
+  after(async () => {
+    const outcome = await importRecentMatches(userId).catch((error: unknown) => ({
+      status: `error: ${String(error)}`,
+    }));
+    if (outcome.status !== "done") console.info("match import", { status: outcome.status });
+  });
   const stored = await countStoredMatches(userId);
   return (
     <section aria-labelledby="verified-title" className={card}>
@@ -169,7 +176,7 @@ async function VerifiedRiotAccount({
       ) : null}
       <p className="text-cuerpo-m text-texto-secundario">
         {stored === 0
-          ? "Estamos trayendo tus partidas ranked de los últimos 30 días. Vuelve a abrir el diario en un momento."
+          ? "Todavía no hay partidas ranked guardadas de los últimos 30 días. Si jugaste, aparecerán en unos minutos al volver a abrir el diario."
           : `Partidas ranked guardadas: ${stored}. Si falta alguna, la traemos la próxima vez que abras el diario.`}
       </p>
     </section>

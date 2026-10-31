@@ -41,6 +41,7 @@ export const riotAccounts = pgTable(
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
     // Ownership check (#26): the icon the player must set and when they last asked to check.
     challengeIconId: integer("challenge_icon_id"),
+    challengeSetAt: timestamp("challenge_set_at", { withTimezone: true }),
     lastCheckAt: timestamp("last_check_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

@@ -6,6 +6,17 @@ export const DEFAULT_ICON_IDS = Array.from({ length: 29 }, (_, id) => id);
 /** One check every 20 seconds per player: three per minute at most. */
 export const CHECK_INTERVAL_SECONDS = 20;
 
+/**
+ * A requested icon lasts 15 minutes. A short life keeps someone who links another
+ * player's Riot ID from several Alamak accounts from waiting until the owner sets one of
+ * their icons.
+ */
+export const CHALLENGE_TTL_SECONDS = 15 * 60;
+
+export function isChallengeExpired(setAt: Date | null, now: Date): boolean {
+  return !setAt || now.getTime() - setAt.getTime() >= CHALLENGE_TTL_SECONDS * 1000;
+}
+
 /** A default icon other than the one the player has now, so the check proves a change. */
 export function pickChallengeIcon(currentIconId: number | null, random = Math.random): number {
   const candidates = DEFAULT_ICON_IDS.filter((id) => id !== currentIconId);

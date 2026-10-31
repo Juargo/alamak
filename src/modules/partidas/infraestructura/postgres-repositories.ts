@@ -1,5 +1,5 @@
 import "server-only";
-import { and, count, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNull, lte, or } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type {
   LinkedAccount,
@@ -17,6 +17,7 @@ function toLinkedAccount(row: typeof riotAccounts.$inferSelect): LinkedAccount {
     region: row.region,
     verified: row.verifiedAt !== null,
     challengeIconId: row.challengeIconId,
+    challengeSetAt: row.challengeSetAt,
     lastCheckAt: row.lastCheckAt,
   };
 }
@@ -45,15 +46,43 @@ export function postgresRiotAccountRepository(db: NodePgDatabase): RiotAccountRe
         : { status: "already-linked" };
     },
 
-    async setChallengeIcon(userId, iconId) {
+    async setChallengeIcon(userId, iconId, at, ttlSeconds) {
+      const expiredBefore = new Date(at.getTime() - ttlSeconds * 1000);
+      // One conditional update: concurrent requests cannot both replace the icon.
       await db
         .update(riotAccounts)
-        .set({ challengeIconId: iconId })
-        .where(and(eq(riotAccounts.userId, userId), isNull(riotAccounts.verifiedAt)));
+        .set({ challengeIconId: iconId, challengeSetAt: at })
+        .where(
+          and(
+            eq(riotAccounts.userId, userId),
+            isNull(riotAccounts.verifiedAt),
+            or(
+              isNull(riotAccounts.challengeSetAt),
+              lte(riotAccounts.challengeSetAt, expiredBefore),
+            ),
+          ),
+        );
+      const [row] = await db
+        .select({ iconId: riotAccounts.challengeIconId, verifiedAt: riotAccounts.verifiedAt })
+        .from(riotAccounts)
+        .where(eq(riotAccounts.userId, userId));
+      return row && !row.verifiedAt ? row.iconId : null;
     },
 
-    async recordCheck(userId, at) {
-      await db.update(riotAccounts).set({ lastCheckAt: at }).where(eq(riotAccounts.userId, userId));
+    async tryRecordCheck(userId, at, intervalSeconds) {
+      const allowedBefore = new Date(at.getTime() - intervalSeconds * 1000);
+      // One conditional update, so parallel requests cannot all pass the limit.
+      const updated = await db
+        .update(riotAccounts)
+        .set({ lastCheckAt: at })
+        .where(
+          and(
+            eq(riotAccounts.userId, userId),
+            or(isNull(riotAccounts.lastCheckAt), lte(riotAccounts.lastCheckAt, allowedBefore)),
+          ),
+        )
+        .returning({ id: riotAccounts.id });
+      return updated.length > 0;
     },
 
     async markVerified(userId, at) {
