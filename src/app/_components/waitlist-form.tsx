@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { trackEvent } from "@/shared/analytics/client";
 import { joinWaitlist, type JoinWaitlistState } from "../actions";
 
 const ERROR_MESSAGES = {
@@ -21,6 +22,13 @@ export function WaitlistForm({ regions, defaultRegion }: Props) {
   const [state, formAction, pending] = useActionState<JoinWaitlistState, FormData>(joinWaitlist, {
     status: "idle",
   });
+  // One event per successful submission: each action returns a new state object.
+  useEffect(() => {
+    if (state.status === "enrolled" && state.region) {
+      trackEvent("lista_espera_inscrito", { region: state.region });
+    }
+  }, [state]);
+
   if (state.status === "enrolled") return <Enrolled email={state.email} />;
 
   const invalidField = state.status === "invalid" ? state.field : undefined;

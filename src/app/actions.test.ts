@@ -18,21 +18,21 @@ describe("joinWaitlist", () => {
   });
 
   it("#4 CA-3: passes the form's email and region to the enrollment", async () => {
-    enrollInWaitlist.mockResolvedValue({ status: "enrolled" });
+    enrollInWaitlist.mockResolvedValue({ status: "enrolled", region: "LAN" });
 
     await expect(
       joinWaitlist({ status: "idle" }, form({ email: "ana@example.com", region: "LAN" })),
-    ).resolves.toEqual({ status: "enrolled", email: "ana@example.com" });
+    ).resolves.toEqual({ status: "enrolled", email: "ana@example.com", region: "LAN" });
     expect(enrollInWaitlist).toHaveBeenCalledWith({ email: "ana@example.com", region: "LAN" });
   });
 
   it("#4 CA-4: an email already on the list gets the same response as a new one", async () => {
-    enrollInWaitlist.mockResolvedValue({ status: "enrolled" });
+    enrollInWaitlist.mockResolvedValue({ status: "enrolled", region: "LAN" });
     const fresh = await joinWaitlist(
       { status: "idle" },
       form({ email: "ana@example.com", region: "LAN" }),
     );
-    enrollInWaitlist.mockResolvedValue({ status: "already-enrolled" });
+    enrollInWaitlist.mockResolvedValue({ status: "already-enrolled", region: "LAN" });
     const repeated = await joinWaitlist(
       { status: "idle" },
       form({ email: "ana@example.com", region: "LAN" }),
@@ -59,7 +59,7 @@ describe("joinWaitlist", () => {
         { status: "idle" },
         form({ email: "bot@example.com", region: "LAN", website: "https://spam.example" }),
       ),
-    ).resolves.toEqual({ status: "enrolled", email: "bot@example.com" });
+    ).resolves.toEqual({ status: "enrolled", email: "bot@example.com", region: null });
     expect(enrollInWaitlist).not.toHaveBeenCalled();
   });
 

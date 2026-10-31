@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 import { testDatabaseUrl } from "./e2e/db";
 
 const port = 3200;
+export const ANALYTICS_HOST = "http://127.0.0.1:3299";
 
 // The app writes sign-ups to this database, so E2E only runs against a local, disposable one.
 // Checked here too: the web server may start before the global setup runs.
@@ -29,6 +30,11 @@ export default defineConfig({
     url: `http://127.0.0.1:${port}`,
     timeout: 180_000,
     reuseExistingServer: false,
-    env: { DATABASE_URL: databaseUrl },
+    env: {
+      DATABASE_URL: databaseUrl,
+      // Analytics on, pointed at a local address that only the analytics test intercepts.
+      NEXT_PUBLIC_POSTHOG_KEY: "phc_e2e",
+      NEXT_PUBLIC_POSTHOG_HOST: ANALYTICS_HOST,
+    },
   },
 });
