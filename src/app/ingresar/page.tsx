@@ -24,7 +24,7 @@ const PROVIDER_LABELS: Record<SignInProvider, string> = {
 };
 
 export default async function SignInPage({ searchParams }: PageProps<"/ingresar">) {
-  if (await signedInOrUnknown()) redirect(DIARY_PATH);
+  if (await isSignedIn()) redirect(DIARY_PATH);
   const { error } = await searchParams;
   const errorCode = Array.isArray(error) ? error[0] : error;
 
@@ -73,8 +73,8 @@ export default async function SignInPage({ searchParams }: PageProps<"/ingresar"
   );
 }
 
-/** Whether to skip the page; if the session cannot be read, show it so the player can retry. */
-async function signedInOrUnknown(): Promise<boolean> {
+/** Whether a session exists; false also when it cannot be read, so the page shows and the player can retry. */
+async function isSignedIn(): Promise<boolean> {
   try {
     return (await getCurrentUser()) !== null;
   } catch (error) {

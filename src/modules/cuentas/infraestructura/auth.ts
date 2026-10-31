@@ -5,6 +5,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { nextCookies } from "better-auth/next-js";
 import { getAuthEnv } from "@/shared/config/env";
 import { getDb } from "@/shared/db/drizzle";
+import { SIGN_IN_PATH } from "../paths";
 import * as schema from "./schema";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
@@ -52,7 +53,7 @@ export function authOptions(db: NodePgDatabase = getDb()): BetterAuthOptions {
     rateLimit: { storage: "database" },
     // OAuth failures that happen before the sign-in's own error URL is known (an expired or
     // replayed state) also return to the sign-in page, with Better Auth's error code.
-    onAPIError: { errorURL: `${env.BETTER_AUTH_URL}/ingresar` },
+    onAPIError: { errorURL: `${env.BETTER_AUTH_URL}${SIGN_IN_PATH}` },
   };
 }
 

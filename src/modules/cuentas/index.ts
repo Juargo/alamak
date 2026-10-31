@@ -5,8 +5,8 @@ import { getAuth } from "./infraestructura/auth";
 
 export { getAuth };
 
-export const SIGN_IN_PATH = "/ingresar";
-export const DIARY_PATH = "/diario";
+export { DIARY_PATH, SIGN_IN_PATH } from "./paths";
+import { SIGN_IN_PATH } from "./paths";
 
 export type CurrentUser = { id: string; name: string; email: string };
 

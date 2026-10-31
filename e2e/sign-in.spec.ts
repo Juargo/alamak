@@ -151,14 +151,35 @@ test("#23 S3: signing out everywhere also ends the session on other devices", as
   await page.getByRole("button", { name: "Cerrar sesión en todos los dispositivos" }).click();
 
   await expect(page).toHaveURL(/\/ingresar$/);
-  // The page left open on the other device, whose cookie has since expired, can still use
-  // the button without an error.
-  await otherDevice.clearCookies();
-  await otherPage.getByRole("button", { name: "Cerrar sesión en todos los dispositivos" }).click();
-  await expect(otherPage.getByRole("main").getByRole("alert")).toHaveText(
+  // The other device still holds its cookie, and the diary no longer lets it in.
+  const otherVisit = await otherDevice.newPage();
+  await otherVisit.goto("/diario");
+  await expect(otherVisit).toHaveURL(/\/ingresar$/);
+  await otherDevice.close();
+});
+
+test("#23 S3: signing out everywhere from a page whose session already ended explains why", async ({
+  page,
+  context,
+}) => {
+  await signIn(context, playerId);
+  await page.goto("/diario");
+  // The session ends while the page stays open (it expired or was signed out elsewhere).
+  await context.clearCookies();
+
+  await page.getByRole("button", { name: "Cerrar sesión en todos los dispositivos" }).click();
+
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText(
     "Tu sesión en este dispositivo ya había terminado, así que no pudimos cerrar las demás. Ingresa de nuevo y vuelve a intentarlo.",
   );
-  await otherPage.goto("/diario");
-  await expect(otherPage).toHaveURL(/\/ingresar$/);
-  await otherDevice.close();
+});
+
+test("#23 an unexpected error code in the address still shows the generic message", async ({
+  page,
+}) => {
+  await page.goto("/ingresar?error=__proto__");
+
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText(
+    "No pudimos completar el ingreso. Vuelve a intentarlo.",
+  );
 });

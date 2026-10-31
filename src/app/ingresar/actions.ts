@@ -14,7 +14,7 @@ export async function signInWith(formData: FormData): Promise<void> {
     url = await startSignIn(provider, { callback: DIARY_PATH, error: SIGN_IN_PATH });
   } catch (error) {
     console.error("sign-in start failed", { provider, error });
-    redirect(signInErrorPath(SIGN_IN_PATH, SIGN_IN_ERROR.unavailable));
+    redirect(signInErrorPath(SIGN_IN_PATH, SIGN_IN_ERROR.failed));
   }
   redirect(url);
 }
