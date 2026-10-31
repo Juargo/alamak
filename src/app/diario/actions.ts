@@ -9,6 +9,6 @@ export async function signOutAction(): Promise<void> {
 }
 
 export async function signOutEverywhereAction(): Promise<void> {
-  await signOutEverywhere();
-  redirect(SIGN_IN_PATH);
+  const revoked = await signOutEverywhere();
+  redirect(revoked ? SIGN_IN_PATH : `${SIGN_IN_PATH}?error=sesion-vencida`);
 }

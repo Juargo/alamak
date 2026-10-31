@@ -45,6 +45,27 @@ test("#23 S4: using the diary renews the session cookie to 7 days", async ({ pag
   expect(cookie?.expires).toBeGreaterThan(sixDaysFromNow);
 });
 
+test("#23 S4: entering through the sign-in page also renews the session cookie", async ({
+  page,
+  context,
+}) => {
+  await signIn(context, playerId, { remainingDays: 5 });
+
+  await page.goto("/ingresar");
+
+  await expect(page).toHaveURL(/\/diario$/);
+  const cookie = (await context.cookies()).find((c) => c.name.endsWith("session_token"));
+  expect(cookie?.expires).toBeGreaterThan(Date.now() / 1000 + 6 * 24 * 60 * 60);
+});
+
+test("#23 a failed sign-in comes back with a message to try again", async ({ page }) => {
+  await page.goto("/ingresar?error=acceso");
+
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText(
+    "No pudimos completar el ingreso. Vuelve a intentarlo.",
+  );
+});
+
 test("#23 S5: the diary sends a visitor without a session to the sign-in page", async ({
   page,
 }) => {
@@ -134,7 +155,9 @@ test("#23 S3: signing out everywhere also ends the session on other devices", as
   // the button without an error.
   await otherDevice.clearCookies();
   await otherPage.getByRole("button", { name: "Cerrar sesión en todos los dispositivos" }).click();
-  await expect(otherPage).toHaveURL(/\/ingresar$/);
+  await expect(otherPage.getByRole("main").getByRole("alert")).toHaveText(
+    "Tu sesión en este dispositivo ya había terminado, así que no pudimos cerrar las demás. Ingresa de nuevo y vuelve a intentarlo.",
+  );
   await otherPage.goto("/diario");
   await expect(otherPage).toHaveURL(/\/ingresar$/);
   await otherDevice.close();

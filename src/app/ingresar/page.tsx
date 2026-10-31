@@ -34,7 +34,9 @@ export default async function SignInPage({ searchParams }: PageProps<"/ingresar"
           role="alert"
           className="rounded-md border border-borde-defecto bg-fondo-superficie p-4 text-cuerpo-m"
         >
-          No pudimos completar el ingreso. Vuelve a intentarlo.
+          {error === "sesion-vencida"
+            ? "Tu sesión en este dispositivo ya había terminado, así que no pudimos cerrar las demás. Ingresa de nuevo y vuelve a intentarlo."
+            : "No pudimos completar el ingreso. Vuelve a intentarlo."}
         </p>
       ) : null}
 

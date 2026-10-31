@@ -6,10 +6,10 @@ Cuentas de jugador con Better Auth sobre Neon (ADR-0017). El código está en `s
 - Sin contraseñas: por ahora solo Google (D-26). Discord y el enlace al correo quedan para más adelante.
 - Una cuenta solo se crea con un correo verificado por el proveedor. Así, cuando se sumen otros proveedores, nadie podrá registrar un correo ajeno sin verificar.
 - Un segundo proveedor se une a la cuenta existente solo si ambos correos están verificados.
-- La sesión se guarda en la tabla `sessions`, dura 7 días y se renueva una vez al día mientras se use. La renovación la hace `src/proxy.ts` en las rutas del diario, porque los Server Components no pueden escribir cookies; el proxy también redirige a `/ingresar` sin sesión antes de enviar HTML. La cookie es `HttpOnly` y `SameSite=Lax`, y `Secure` en producción (la URL base debe ser https; la validación lo exige).
+- La sesión se guarda en la tabla `sessions`, dura 7 días y se renueva una vez al día mientras se use. La renovación la hace `src/proxy.ts` en `/diario` e `/ingresar`, porque los Server Components no pueden escribir cookies; el proxy también redirige del diario a `/ingresar` sin sesión antes de enviar HTML. La cookie es `HttpOnly` y `SameSite=Lax`, y `Secure` en producción (la URL base debe ser https; la validación lo exige).
 - "Cerrar sesión en todos los dispositivos" borra todas las sesiones del jugador.
 - La API cruda de Better Auth no permite cambiar el nombre o el correo, borrar la cuenta ni vincular proveedores (`disabledPaths`).
-- El límite de intentos se guarda en la tabla `rate_limits` y se activa en producción.
+- El límite de intentos se guarda en la tabla `rate_limits` y se activa en producción. **Pendiente:** la acción de ingreso de `/ingresar` llama a Better Auth desde el servidor y no pasa por ese límite; conviene agregarle uno propio antes de abrir el diario al público.
 - Las pantallas del diario usan `requireUser()`: sin sesión redirigen a `/ingresar`. El `userId` de cualquier caso de uso sale de `getCurrentUser()`, nunca del cliente.
 
 ## Variables de entorno

@@ -54,15 +54,17 @@ export async function signOut(): Promise<void> {
   await getAuth().api.signOut({ headers: await headers() });
 }
 
-/** Ends every session of the signed-in user, on all devices. */
-export async function signOutEverywhere(): Promise<void> {
+/**
+ * Ends every session of the signed-in user, on all devices. Returns false when this device
+ * had no session left (a page left open), so the other sessions could not be revoked.
+ */
+export async function signOutEverywhere(): Promise<boolean> {
   const requestHeaders = await headers();
-  // A page left open after signing out elsewhere has no session left to revoke.
-  if (await getAuth().api.getSession({ headers: requestHeaders })) {
-    await getAuth().api.revokeSessions({ headers: requestHeaders });
-  }
+  const hasCurrentSession = (await getAuth().api.getSession({ headers: requestHeaders })) !== null;
+  if (hasCurrentSession) await getAuth().api.revokeSessions({ headers: requestHeaders });
   // Clears this device's cookie in every case.
   await getAuth().api.signOut({ headers: requestHeaders });
+  return hasCurrentSession;
 }
 
 /** Checks the session of a request outside React (the proxy), renewing it when due. */
