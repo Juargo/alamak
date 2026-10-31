@@ -24,6 +24,7 @@ El registro completo de D-01 a D-16 **no está en el repo ni en Obsidian**. Solo
 | D-23 | Responde P-06: tags predefinidos iniciales en tres grupos. *Cómo llegué*: Cansado, Distraído, Venía de una derrota, Fuera de mi pool. *El equipo*: Buena comunicación, Roces en el chat, Jugué en dúo. *La partida*: Draft difícil, Mal inicio, Remontada, Jugué por objetivos, Partida larga | Issue #22 |
 | D-24 | Responde P-10: una cuenta sin iniciar sesión ni anotar durante 24 meses se borra por completo, con aviso por correo 30 días antes | Issue #22 |
 | D-25 | Autenticación de jugadores con Better Auth sobre Neon; aislamiento por `user_id` obligatorio en los casos de uso en lugar de la RLS de Supabase | ADR-0017; issue #22 |
+| D-26 | Por ahora el inicio de sesión es solo con Google; Discord y el enlace al correo quedan pendientes a futuro | Issue #23 |
 
 Faltan D-04, D-05, D-07, D-12, D-13, D-15 y D-16, y el contenido de D-01 y D-06. Ver P-08.
 

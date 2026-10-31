@@ -6,6 +6,8 @@
 - **Requisitos:** RF-01, RF-04, RNF-12, RES-07, RES-12, DI-01, DI-11, D-10, D-11
 - **Issue:** #22
 
+> **Nota (2026-10-30):** por D-26, la primera entrega usa solo Google; Discord y el enlace al correo quedan para más adelante.
+
 ## Contexto
 - El diario (M3) necesita cuentas de jugador. ADR-0007 eligió Supabase Auth, pero la base pasó a Neon (ADR-0014), así que el proveedor quedó sin decidir.
 - ADR-0007 sigue vigente en lo demás: sin contraseñas (Discord, Google y enlace al correo), cookies `HttpOnly`/`Secure`/`SameSite=Lax`, sesión corta con renovación, cerrar sesión en todos los dispositivos y aislamiento estricto por usuario.

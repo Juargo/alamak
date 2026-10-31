@@ -23,3 +23,31 @@ export function getServerEnv(): ServerEnv {
   cached = result.data;
   return cached;
 }
+
+// Session cookies are Secure only when the base URL is https, so production must use it.
+const baseUrlSchema = z
+  .url()
+  .refine((url) => process.env.VERCEL_ENV !== "production" || url.startsWith("https://"));
+
+const authEnvSchema = z.object({
+  BETTER_AUTH_SECRET: z.string().min(32),
+  BETTER_AUTH_URL: baseUrlSchema,
+  GOOGLE_CLIENT_ID: z.string().min(1),
+  GOOGLE_CLIENT_SECRET: z.string().min(1),
+});
+
+export type AuthEnv = z.infer<typeof authEnvSchema>;
+
+let cachedAuth: AuthEnv | undefined;
+
+/** Sign-in settings (ADR-0017), validated apart so pages without sign-in keep working without them. */
+export function getAuthEnv(): AuthEnv {
+  if (cachedAuth) return cachedAuth;
+  const result = authEnvSchema.safeParse(process.env);
+  if (!result.success) {
+    const missing = result.error.issues.map((issue) => issue.path.join(".")).join(", ");
+    throw new Error(`Invalid auth environment variables: ${missing}`);
+  }
+  cachedAuth = result.data;
+  return cachedAuth;
+}
