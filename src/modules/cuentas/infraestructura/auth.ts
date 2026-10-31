@@ -25,6 +25,17 @@ export function authOptions(db: NodePgDatabase = getDb()): BetterAuthOptions {
       discord: { clientId: env.DISCORD_CLIENT_ID, clientSecret: env.DISCORD_CLIENT_SECRET },
       google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET },
     },
+    // A provider may only join an existing account when both emails are verified, so an
+    // unverified Discord email cannot take over someone else's Google account.
+    account: { accountLinking: { enabled: true, requireLocalEmailVerified: true } },
+    databaseHooks: {
+      user: {
+        create: {
+          // Nor can it claim an email first: accounts start only from a verified email.
+          before: async (user) => (user.emailVerified ? { data: user } : false),
+        },
+      },
+    },
     // Stored session, 7 days, renewed at most once a day while in use.
     session: { expiresIn: 7 * DAY_IN_SECONDS, updateAge: DAY_IN_SECONDS },
     // Cookies are HttpOnly and SameSite=Lax by default, and Secure whenever the base URL is https.

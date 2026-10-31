@@ -1,11 +1,12 @@
 import { betterAuth } from "better-auth";
 import { testUtils } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { authOptions } from "./auth";
-import { user } from "./schema";
+import { rateLimit as rateLimitTable, session as sessionTable, user } from "./schema";
 
 const url = process.env.TEST_DATABASE_URL;
 
@@ -44,6 +45,7 @@ describe.runIf(isLocal)("auth sessions (integration)", () => {
 
   beforeEach(async () => {
     await db.delete(user);
+    await db.delete(rateLimitTable);
   });
 
   afterAll(async () => {
@@ -52,10 +54,54 @@ describe.runIf(isLocal)("auth sessions (integration)", () => {
 
   async function signedInPlayer() {
     const test = (await auth.$context).test;
-    const player = test.createUser({ email: "ana@example.com", name: "Ana" });
+    const player = test.createUser({ email: "ana@example.com", name: "Ana", emailVerified: true });
     await test.saveUser(player);
     return { test, player };
   }
+
+  it("#23 S1: an account never starts from an unverified provider email", async () => {
+    const test = (await auth.$context).test;
+    const intruder = test.createUser({ email: "ana@example.com", emailVerified: false });
+
+    expect(await test.saveUser(intruder)).toBeNull();
+
+    expect(await db.select().from(user)).toEqual([]);
+  });
+
+  it("#23 S4: a session in use is renewed to 7 days once a day has passed", async () => {
+    const { test, player } = await signedInPlayer();
+    const { session, headers } = await test.login({ userId: player.id });
+    // Age the session by two days, as if it had been created then.
+    await db
+      .update(sessionTable)
+      .set({ expiresAt: new Date(session.expiresAt.getTime() - 2 * DAY_MS) })
+      .where(eq(sessionTable.id, session.id));
+
+    const renewed = await auth.api.getSession({ headers });
+
+    expect(renewed?.session.expiresAt.getTime()).toBeGreaterThan(Date.now() + 7 * DAY_MS - 60_000);
+    const [stored] = await db.select().from(sessionTable).where(eq(sessionTable.id, session.id));
+    expect(stored.expiresAt.getTime()).toBeGreaterThan(Date.now() + 7 * DAY_MS - 60_000);
+  });
+
+  it("#23 rate limiting counts requests in the database and rejects the excess", async () => {
+    const limited = betterAuth({
+      ...authOptions(db),
+      rateLimit: { enabled: true, storage: "database", window: 60, max: 2 },
+    });
+    const request = () =>
+      limited.handler(
+        new Request("https://alamak.example/api/auth/get-session", {
+          headers: { "x-forwarded-for": "203.0.113.7" },
+        }),
+      );
+
+    const statuses = [];
+    for (let i = 0; i < 3; i++) statuses.push((await request()).status);
+
+    expect(statuses).toEqual([200, 200, 429]);
+    expect(await db.select().from(rateLimitTable)).toHaveLength(1);
+  });
 
   it("#23 S4: the session cookie is HttpOnly, Secure and SameSite=Lax", async () => {
     const { test, player } = await signedInPlayer();

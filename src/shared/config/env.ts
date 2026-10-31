@@ -24,9 +24,14 @@ export function getServerEnv(): ServerEnv {
   return cached;
 }
 
+// Session cookies are Secure only when the base URL is https, so production must use it.
+const baseUrlSchema = z
+  .url()
+  .refine((url) => process.env.VERCEL_ENV !== "production" || url.startsWith("https://"));
+
 const authEnvSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32),
-  BETTER_AUTH_URL: z.url(),
+  BETTER_AUTH_URL: baseUrlSchema,
   DISCORD_CLIENT_ID: z.string().min(1),
   DISCORD_CLIENT_SECRET: z.string().min(1),
   GOOGLE_CLIENT_ID: z.string().min(1),
