@@ -1,5 +1,10 @@
-import { describe, expect, it } from "vitest";
-import { RiotRateLimitedError, RiotUnavailableError, type RiotApi } from "./riot-port";
+import { describe, expect, it, vi } from "vitest";
+import {
+  RiotRateLimitedError,
+  RiotRejectedError,
+  RiotUnavailableError,
+  type RiotApi,
+} from "./riot-port";
 import { linkRiotAccount } from "./link-riot-account";
 import { inMemoryAccounts, riotWith } from "./test-doubles";
 
@@ -69,21 +74,23 @@ describe("linkRiotAccount", () => {
     expect(riot.calls).toEqual([]);
   });
 
-  it.each([new RiotRateLimitedError(10), new RiotUnavailableError("down")])(
-    "#25 S3 reports Riot as unavailable on %s",
-    async (error) => {
-      const riot: RiotApi = {
-        findAccount: async () => {
-          throw error;
-        },
-        rankedMatchIds: async () => [],
-        rankedMatch: async () => null,
-      };
-      const link = linkRiotAccount({ accounts: inMemoryAccounts(), riot });
+  it.each([
+    new RiotRateLimitedError(10),
+    new RiotUnavailableError("down"),
+    new RiotRejectedError(403),
+  ])("#25 S3 reports Riot as unavailable on %s", async (error) => {
+    const riot: RiotApi = {
+      findAccount: async () => {
+        throw error;
+      },
+      rankedMatchIds: async () => [],
+      rankedMatch: async () => null,
+    };
+    const link = linkRiotAccount({ accounts: inMemoryAccounts(), riot });
+    vi.spyOn(console, "error").mockImplementation(() => {});
 
-      expect(await link("user-ana", { riotId: "Ana#LAS", region: "LAS" })).toEqual({
-        status: "riot-unavailable",
-      });
-    },
-  );
+    expect(await link("user-ana", { riotId: "Ana#LAS", region: "LAS" })).toEqual({
+      status: "riot-unavailable",
+    });
+  });
 });

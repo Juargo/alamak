@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { RiotRateLimitedError, RiotUnavailableError } from "../aplicacion/riot-port";
+import {
+  RiotRateLimitedError,
+  RiotRejectedError,
+  RiotUnavailableError,
+} from "../aplicacion/riot-port";
 import { createRiotHttpApi } from "./riot-http-api";
 
 const PUUID = "puuid-ana";
@@ -24,9 +28,14 @@ function fakeFetch(...replies: Reply[]) {
   return { fetch, requests };
 }
 
-function api(fetch: typeof globalThis.fetch) {
-  return createRiotHttpApi({ apiKey: "RGAPI-test", fetch, sleep: async () => {} });
+function api(
+  fetch: typeof globalThis.fetch,
+  sleep: (ms: number) => Promise<void> = async () => {},
+) {
+  return createRiotHttpApi({ apiKey: "RGAPI-test", fetch, sleep });
 }
+
+const SUMMONER: Reply = { status: 200, body: { puuid: PUUID } };
 
 function participant(overrides: Record<string, unknown> = {}) {
   return {
@@ -55,10 +64,10 @@ function matchBody(overrides: Record<string, unknown> = {}, player = participant
 
 describe("riot http api", () => {
   it("#25 S1 finds an account by Riot ID on the region's routing host, with the key in a header", async () => {
-    const { fetch, requests } = fakeFetch({
-      status: 200,
-      body: { puuid: PUUID, gameName: "Señor Tilt", tagLine: "LAS" },
-    });
+    const { fetch, requests } = fakeFetch(
+      { status: 200, body: { puuid: PUUID, gameName: "Señor Tilt", tagLine: "LAS" } },
+      SUMMONER,
+    );
 
     const account = await api(fetch).findAccount({ gameName: "Señor Tilt", tagLine: "LAS" }, "LAS");
 
@@ -68,7 +77,21 @@ describe("riot http api", () => {
         url: "https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/Se%C3%B1or%20Tilt/LAS",
         token: "RGAPI-test",
       },
+      {
+        url: `https://la2.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${PUUID}`,
+        token: "RGAPI-test",
+      },
     ]);
+  });
+
+  it("#25 S1 does not find an account that exists in another region", async () => {
+    const { fetch, requests } = fakeFetch(
+      { status: 200, body: { puuid: PUUID, gameName: "Ana", tagLine: "LAS" } },
+      { status: 404 },
+    );
+
+    expect(await api(fetch).findAccount({ gameName: "Ana", tagLine: "LAS" }, "EUW")).toBeNull();
+    expect(requests[1].url).toMatch(/^https:\/\/euw1\.api\.riotgames\.com\/lol\/summoner\/v4\//);
   });
 
   it("#25 S1 reports a missing account as null", async () => {
@@ -173,12 +196,13 @@ describe("riot http api", () => {
       { status: 503 },
       { status: 500 },
       { status: 200, body: { puuid: PUUID, gameName: "Ana", tagLine: "LAS" } },
+      SUMMONER,
     );
 
     expect(await api(fetch).findAccount({ gameName: "Ana", tagLine: "LAS" }, "LAS")).toMatchObject({
       puuid: PUUID,
     });
-    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(fetch).toHaveBeenCalledTimes(4);
   });
 
   it("#25 S3 gives up after three failed attempts", async () => {
@@ -207,8 +231,41 @@ describe("riot http api", () => {
 
     await expect(
       api(fetch).findAccount({ gameName: "Ana", tagLine: "LAS" }, "LAS"),
-    ).rejects.toThrow(/403/);
+    ).rejects.toThrow(RiotRejectedError);
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("#25 S3 retries network errors and timeouts, waiting only between attempts", async () => {
+    const waits: number[] = [];
+    const fetch = vi.fn(async () => {
+      throw new DOMException("The operation timed out.", "TimeoutError");
+    });
+
+    await expect(
+      api(fetch as unknown as typeof globalThis.fetch, async (ms) => {
+        waits.push(ms);
+      }).findAccount({ gameName: "Ana", tagLine: "LAS" }, "LAS"),
+    ).rejects.toThrow(RiotUnavailableError);
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(waits).toEqual([1000, 2000]);
+  });
+
+  it("#25 S3 gives every request a time limit", async () => {
+    const { fetch } = fakeFetch({ status: 200, body: [] }, { status: 200, body: [] });
+
+    await api(fetch).rankedMatchIds(PUUID, "LAS", new Date(0));
+
+    expect(fetch.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("#25 S3 retries a cut-off body instead of failing on it", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("{not json", { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(["LA2_1"]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+
+    expect(await api(fetch).rankedMatchIds(PUUID, "LAS", new Date(0))).toEqual(["LA2_1"]);
   });
 
   it("#25 E2E can point the client at a local fake Riot", async () => {

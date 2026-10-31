@@ -18,7 +18,14 @@ export async function linkRiotAction(_: LinkRiotState, formData: FormData): Prom
   const riotId = String(formData.get("riotId") ?? "");
   const region = String(formData.get("region") ?? "");
 
-  const result = await linkRiotAccount(user.id, { riotId, region });
+  let result;
+  try {
+    result = await linkRiotAccount(user.id, { riotId, region });
+  } catch (error) {
+    // Unexpected (e.g. the Riot key is not configured): a clear message, never an error page.
+    console.error("linking the Riot account failed", { error: String(error) });
+    return { status: "error", reason: "riot-unavailable", values: { riotId, region } };
+  }
   switch (result.status) {
     case "linked":
     case "already-linked":

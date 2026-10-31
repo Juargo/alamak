@@ -3,12 +3,12 @@
 Vinculación de la cuenta de Riot e importación de partidas ranked (issue #25). El código está en `src/modules/partidas/`; la pantalla es `/diario`.
 
 ## Cómo funciona
-- El jugador escribe su Riot ID (`Nombre#TAG`) y su región (LAS, LAN o EUW, preseleccionada según el país o el idioma del navegador). La app busca la cuenta con `account-v1` y la guarda en `riot_accounts`, todavía **sin verificar**.
+- El jugador escribe su Riot ID (`Nombre#TAG`) y su región (LAS, LAN o EUW, preseleccionada según el país o el idioma del navegador). La app busca la cuenta con `account-v1` y confirma con `summoner-v4` que juega en el servidor de esa región (los Riot ID son globales; sin esta comprobación, una región equivocada dejaría la importación vacía). Después la guarda en `riot_accounts`, todavía **sin verificar**.
 - Una cuenta de Riot por jugador. La misma cuenta de Riot puede quedar vinculada a varios jugadores mientras ninguno la verifique; al verificarla (#26) queda solo para uno (índice único parcial sobre `puuid`).
 - **Las partidas se importan recién al comprobar la propiedad (#26)**, para no guardar datos de cuentas ajenas ni gastar los límites de la clave en vínculos falsos. Hasta entonces no se muestra ninguna partida.
 - La importación trae las partidas Solo/Duo (cola 420) y Flex (440) de los últimos 30 días con `match-v5`, y guarda solo lo del propio jugador: resultado, campeón, rol, fecha y hora, duración y si fue remake. Nada de MMR ni rangos.
 - Es idempotente: se saltan las partidas ya guardadas, y una segunda importación no duplica nada (índice único por cuenta y partida).
-- Las llamadas a Riot se hacen solo en el servidor, con la clave en el header `X-Riot-Token`. Ante errores temporales (5xx o de red) se reintenta hasta 3 veces. Ante un 429 se detiene respetando `Retry-After`: cada partida se guarda apenas llega, así que la próxima ejecución sigue donde quedó.
+- Las llamadas a Riot se hacen solo en el servidor, con la clave en el header `X-Riot-Token`. Cada pedido tiene un tiempo máximo de 8 segundos. Ante errores temporales (5xx, de red, tiempo agotado o respuesta cortada) se reintenta hasta 3 veces. Ante un 429 se detiene respetando `Retry-After`; ante otro 4xx (por ejemplo, una clave vencida) no reintenta. En todos los casos el jugador ve "Riot no responde en este momento" y la importación conserva lo que ya guardó: cada partida se guarda apenas llega, así que la próxima ejecución sigue donde quedó.
 - Las imágenes de campeones salen solo de Data Dragon (`championIconUrl`).
 
 ## Variables de entorno

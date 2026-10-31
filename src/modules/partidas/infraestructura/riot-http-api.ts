@@ -2,6 +2,7 @@ import "server-only";
 import type { Region } from "@/modules/captacion";
 import {
   RiotRateLimitedError,
+  RiotRejectedError,
   RiotUnavailableError,
   type RiotAccount,
   type RiotApi,
@@ -15,22 +16,26 @@ import {
 } from "../dominio/match";
 import type { RiotId } from "../dominio/riot-id";
 
-// Riot groups servers by continent for account-v1 and match-v5.
+// Riot groups servers by continent for account-v1 and match-v5, and names each game server
+// (platform) for summoner-v4.
 const ROUTE_BY_REGION: Record<Region, "americas" | "europe"> = {
   LAS: "americas",
   LAN: "americas",
   EUW: "europe",
 };
+const PLATFORM_BY_REGION: Record<Region, string> = { LAS: "la2", LAN: "la1", EUW: "euw1" };
 
 const PAGE_SIZE = 100;
 const MAX_ATTEMPTS = 3;
 // Without Riot's own flag, a game this short ended in a remake.
 const REMAKE_MAX_SECONDS = 5 * 60;
 const DEFAULT_RETRY_AFTER_SECONDS = 10;
+// A stalled Riot must not keep the player waiting: give up on one attempt after this long.
+const REQUEST_TIMEOUT_MS = 8000;
 
 type Options = {
   apiKey: string;
-  /** Replaces `https://<route>.api.riotgames.com` with `<baseUrl>/<route>` (local fake in E2E). */
+  /** Replaces `https://<host>.api.riotgames.com` with `<baseUrl>/<host>` (local fake in E2E). */
   baseUrl?: string;
   fetch?: typeof globalThis.fetch;
   sleep?: (ms: number) => Promise<void>;
@@ -58,34 +63,49 @@ export function createRiotHttpApi(options: Options): RiotApi {
   const fetch = options.fetch ?? globalThis.fetch;
   const sleep = options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
 
-  function url(region: Region, path: string): string {
-    const route = ROUTE_BY_REGION[region];
+  function hostUrl(host: string, path: string): string {
     return options.baseUrl
-      ? `${options.baseUrl}/${route}${path}`
-      : `https://${route}.api.riotgames.com${path}`;
+      ? `${options.baseUrl}/${host}${path}`
+      : `https://${host}.api.riotgames.com${path}`;
   }
+  const url = (region: Region, path: string) => hostUrl(ROUTE_BY_REGION[region], path);
+  const platformUrl = (region: Region, path: string) => hostUrl(PLATFORM_BY_REGION[region], path);
 
-  /** GETs JSON; null on 404. Retries 5xx and network errors, stops at once on 429. */
+  /**
+   * GETs JSON; null on 404. Retries 5xx, network errors, timeouts and cut-off bodies; stops
+   * at once on 429 (rate limit) and on other 4xx, which retrying cannot fix.
+   */
   async function get<T>(target: string): Promise<T | null> {
     let lastFailure = "";
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      if (attempt > 1) await sleep(1000 * (attempt - 1));
       let response: Response;
       try {
-        response = await fetch(target, { headers: { "X-Riot-Token": options.apiKey } });
+        response = await fetch(target, {
+          headers: { "X-Riot-Token": options.apiKey },
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        });
       } catch (error) {
         lastFailure = `network error: ${String(error)}`;
-        await sleep(1000 * attempt);
         continue;
       }
-      if (response.ok) return (await response.json()) as T;
       if (response.status === 404) return null;
       if (response.status === 429) {
         const retryAfter = Number(response.headers.get("Retry-After"));
         throw new RiotRateLimitedError(retryAfter > 0 ? retryAfter : DEFAULT_RETRY_AFTER_SECONDS);
       }
-      if (response.status < 500) throw new Error(`Riot API answered ${response.status}`);
-      lastFailure = `status ${response.status}`;
-      if (attempt < MAX_ATTEMPTS) await sleep(1000 * attempt);
+      if (response.status >= 400 && response.status < 500) {
+        throw new RiotRejectedError(response.status);
+      }
+      if (!response.ok) {
+        lastFailure = `status ${response.status}`;
+        continue;
+      }
+      try {
+        return (await response.json()) as T;
+      } catch (error) {
+        lastFailure = `unreadable body: ${String(error)}`;
+      }
     }
     throw new RiotUnavailableError(
       `Riot API unavailable after ${MAX_ATTEMPTS} attempts (${lastFailure})`,
@@ -100,9 +120,17 @@ export function createRiotHttpApi(options: Options): RiotApi {
           `/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
         ),
       );
-      return (
-        account && { puuid: account.puuid, gameName: account.gameName, tagLine: account.tagLine }
+      if (!account) return null;
+      // Riot IDs are global; the player must also exist on the chosen region's server, or
+      // the import would look for their games in the wrong place.
+      const onPlatform = await get<{ puuid: string }>(
+        platformUrl(
+          region,
+          `/lol/summoner/v4/summoners/by-puuid/${encodeURIComponent(account.puuid)}`,
+        ),
       );
+      if (!onPlatform) return null;
+      return { puuid: account.puuid, gameName: account.gameName, tagLine: account.tagLine };
     },
 
     async rankedMatchIds(puuid, region, since) {

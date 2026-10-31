@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { RankedMatch } from "../dominio/match";
 import { importRecentMatches } from "./import-recent-matches";
-import { RiotRateLimitedError } from "./riot-port";
+import { RiotRateLimitedError, RiotRejectedError } from "./riot-port";
 import { inMemoryAccounts, inMemoryMatches, riotWith } from "./test-doubles";
 
 const NOW = new Date("2026-10-31T12:00:00Z");
@@ -99,6 +99,19 @@ describe("importRecentMatches", () => {
     riot.failMatchAfter(Infinity);
     expect(await importer("user-ana")).toEqual({ status: "done", imported: 2 });
     expect((await matches.storedMatchIds("user-ana", accountId)).size).toBe(3);
+  });
+
+  it("#25 S3 keeps what it stored when Riot fails or refuses the key, and resumes later", async () => {
+    const { importer, riot, matches, accountId } = await setup({
+      verified: true,
+      games: [game("LA2_2"), game("LA2_1")],
+    });
+    riot.failMatchAfter(1, new RiotRejectedError(403));
+
+    expect(await importer("user-ana")).toEqual({ status: "failed", imported: 1 });
+    riot.failMatchAfter(Infinity);
+    expect(await importer("user-ana")).toEqual({ status: "done", imported: 1 });
+    expect((await matches.storedMatchIds("user-ana", accountId)).size).toBe(2);
   });
 
   it("#25 RF-07 skips ids Riot no longer resolves to a ranked game of the player", async () => {

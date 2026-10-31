@@ -1,7 +1,7 @@
 import { REGIONS, type Region } from "@/modules/captacion";
 import { parseRiotId } from "../dominio/riot-id";
 import type { LinkedAccount, RiotAccountRepository } from "./repositories";
-import { RiotRateLimitedError, RiotUnavailableError, type RiotApi } from "./riot-port";
+import { isRiotFailure, type RiotApi } from "./riot-port";
 
 export type LinkResult =
   | { status: "linked"; account: LinkedAccount }
@@ -33,10 +33,9 @@ export function linkRiotAccount(deps: { accounts: RiotAccountRepository; riot: R
     try {
       account = await deps.riot.findAccount(riotId, input.region);
     } catch (error) {
-      if (error instanceof RiotRateLimitedError || error instanceof RiotUnavailableError) {
-        return { status: "riot-unavailable" };
-      }
-      throw error;
+      if (!isRiotFailure(error)) throw error;
+      console.error("riot account lookup failed", { error: String(error) });
+      return { status: "riot-unavailable" };
     }
     if (!account) return { status: "not-found" };
     return deps.accounts.link(userId, { ...account, region: input.region });

@@ -1,10 +1,11 @@
 import { IMPORT_WINDOW_DAYS } from "../dominio/match";
 import type { MatchRepository, RiotAccountRepository } from "./repositories";
-import { RiotRateLimitedError, type RiotApi } from "./riot-port";
+import { isRiotFailure, RiotRateLimitedError, type RiotApi } from "./riot-port";
 
 export type ImportResult =
   | { status: "done"; imported: number }
   | { status: "paused"; imported: number; retryAfterSeconds: number }
+  | { status: "failed"; imported: number }
   | { status: "not-linked" }
   | { status: "not-verified" };
 
@@ -40,6 +41,8 @@ export function importRecentMatches(deps: {
       if (error instanceof RiotRateLimitedError) {
         return { status: "paused", imported, retryAfterSeconds: error.retryAfterSeconds };
       }
+      // Riot down or refusing the key: keep what was stored; a later run resumes.
+      if (isRiotFailure(error)) return { status: "failed", imported };
       throw error;
     }
     return { status: "done", imported };

@@ -60,6 +60,23 @@ test("#25 S5: once linked, the form to link another account is gone, also after 
   await expect(page.getByLabel("Riot ID")).toHaveCount(0);
 });
 
+test("#25 S1: an account that plays in another region is not linked to the wrong one", async ({
+  page,
+}) => {
+  await page.goto("/diario");
+  await page.getByLabel("Riot ID").fill(KNOWN);
+  await page.getByLabel("Región").selectOption("EUW");
+
+  await page.getByRole("button", { name: "Vincular cuenta" }).click();
+
+  await expect(
+    page.getByText(
+      "No encontramos esa cuenta en la región elegida. Revisa el nombre, el tag y la región.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Cuenta vinculada/ })).toHaveCount(0);
+});
+
 for (const [name, riotId, message] of [
   [
     "a malformed Riot ID",

@@ -20,9 +20,26 @@ export class RiotUnavailableError extends Error {
   }
 }
 
+/** Riot refused the request (400, 401, 403: e.g. an expired key); retrying will not help. */
+export class RiotRejectedError extends Error {
+  constructor(readonly status: number) {
+    super(`Riot API refused the request with status ${status}`);
+    this.name = "RiotRejectedError";
+  }
+}
+
+/** Any Riot failure the player can only wait out. */
+export function isRiotFailure(error: unknown): boolean {
+  return (
+    error instanceof RiotRateLimitedError ||
+    error instanceof RiotUnavailableError ||
+    error instanceof RiotRejectedError
+  );
+}
+
 /** Official Riot API, called only from the server (RNF-29). */
 export interface RiotApi {
-  /** The account behind a Riot ID, or null when it does not exist. */
+  /** The account behind a Riot ID on that region's server, or null when it is not there. */
   findAccount(riotId: RiotId, region: Region): Promise<RiotAccount | null>;
   /** Ids of the player's Solo/Duo and Flex games started since `since`. */
   rankedMatchIds(puuid: string, region: Region, since: Date): Promise<string[]>;
