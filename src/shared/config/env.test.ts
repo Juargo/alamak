@@ -54,3 +54,28 @@ describe("getAuthEnv", () => {
     expect(getAuthEnv().BETTER_AUTH_URL).toBe("http://127.0.0.1:3200");
   });
 });
+
+describe("getRiotEnv", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  async function loadGetRiotEnv() {
+    vi.resetModules();
+    return (await import("./env")).getRiotEnv;
+  }
+
+  it("#25 S3 accepts a Riot API key", async () => {
+    vi.stubEnv("RIOT_API_KEY", "RGAPI-0000");
+    const getRiotEnv = await loadGetRiotEnv();
+
+    expect(getRiotEnv().RIOT_API_KEY).toBe("RGAPI-0000");
+  });
+
+  it("#25 S3 refuses a missing or malformed key", async () => {
+    vi.stubEnv("RIOT_API_KEY", "not-a-riot-key");
+    const getRiotEnv = await loadGetRiotEnv();
+
+    expect(() => getRiotEnv()).toThrow("Invalid Riot environment variables: RIOT_API_KEY");
+  });
+});

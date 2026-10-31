@@ -4,6 +4,7 @@ import { testDatabaseUrl } from "./e2e/db";
 const port = 3200;
 export const ANALYTICS_HOST = "http://127.0.0.1:3299";
 export const BASE_URL = `http://127.0.0.1:${port}`;
+export const FAKE_RIOT_PORT = 3298;
 
 // Fake sign-in settings: E2E never reaches Google, and creates sessions with
 // the same secret (e2e/auth.ts).
@@ -46,6 +47,9 @@ export default defineConfig({
       NEXT_PUBLIC_POSTHOG_KEY: "phc_e2e",
       NEXT_PUBLIC_POSTHOG_HOST: ANALYTICS_HOST,
       ...E2E_AUTH,
+      // The app talks to a local fake Riot (e2e/fake-riot.ts), never to the real API.
+      RIOT_API_KEY: "RGAPI-e2e",
+      RIOT_API_BASE_URL: `http://127.0.0.1:${FAKE_RIOT_PORT}`,
     },
   },
 });

@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { testUtils } from "better-auth/plugins";
-import { eq } from "drizzle-orm";
+import { eq, like } from "drizzle-orm";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
@@ -42,7 +42,8 @@ describe.runIf(isLocal)("auth sessions (integration)", () => {
   });
 
   beforeEach(async () => {
-    await db.delete(user);
+    // Only this suite's players: other suites share the database and run in parallel.
+    await db.delete(user).where(like(user.email, "auth-%"));
     await db.delete(rateLimitTable);
   });
 
@@ -52,18 +53,22 @@ describe.runIf(isLocal)("auth sessions (integration)", () => {
 
   async function signedInPlayer() {
     const test = (await auth.$context).test;
-    const player = test.createUser({ email: "ana@example.com", name: "Ana", emailVerified: true });
+    const player = test.createUser({
+      email: "auth-ana@example.com",
+      name: "Ana",
+      emailVerified: true,
+    });
     await test.saveUser(player);
     return { test, player };
   }
 
   it("#23 S1: an account never starts from an unverified provider email", async () => {
     const test = (await auth.$context).test;
-    const intruder = test.createUser({ email: "ana@example.com", emailVerified: false });
+    const intruder = test.createUser({ email: "auth-ana@example.com", emailVerified: false });
 
     expect(await test.saveUser(intruder)).toBeNull();
 
-    expect(await db.select().from(user)).toEqual([]);
+    expect(await db.select().from(user).where(like(user.email, "auth-%"))).toEqual([]);
   });
 
   it("#23 S4: a session in use is renewed to 7 days once a day has passed", async () => {
@@ -102,8 +107,8 @@ describe.runIf(isLocal)("auth sessions (integration)", () => {
       );
       expect(response.status, path).toBe(404);
     }
-    const [stored] = await db.select().from(user);
-    expect(stored).toMatchObject({ name: "Ana", email: "ana@example.com" });
+    const [stored] = await db.select().from(user).where(eq(user.id, player.id));
+    expect(stored).toMatchObject({ name: "Ana", email: "auth-ana@example.com" });
   });
 
   it("#23 an expired or replayed Google return comes back to the sign-in page", async () => {
@@ -153,7 +158,7 @@ describe.runIf(isLocal)("auth sessions (integration)", () => {
     expect(session.expiresAt.getTime() - Date.now()).toBeGreaterThan(7 * DAY_MS - 60_000);
     expect(session.expiresAt.getTime() - Date.now()).toBeLessThanOrEqual(7 * DAY_MS);
     const current = await auth.api.getSession({ headers });
-    expect(current?.user.email).toBe("ana@example.com");
+    expect(current?.user.email).toBe("auth-ana@example.com");
   });
 
   it("#23 S3: signing out everywhere ends every session of the user", async () => {

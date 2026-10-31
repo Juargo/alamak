@@ -15,6 +15,13 @@
       "when": 1793410176393,
       "tag": "0001_crear_cuentas",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793415520797,
+      "tag": "0002_crear_partidas",
+      "breakpoints": true
     }
   ]
 }
