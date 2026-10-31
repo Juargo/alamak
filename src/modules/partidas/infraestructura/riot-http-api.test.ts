@@ -100,6 +100,18 @@ describe("riot http api", () => {
     expect(await api(fetch).findAccount({ gameName: "Nadie", tagLine: "000" }, "EUW")).toBeNull();
   });
 
+  it("#26 S2 reads the player's current profile icon on the region's server", async () => {
+    const { fetch, requests } = fakeFetch({
+      status: 200,
+      body: { puuid: PUUID, profileIconId: 7 },
+    });
+
+    expect(await api(fetch).profileIconId(PUUID, "LAN")).toBe(7);
+    expect(requests[0].url).toBe(
+      `https://la1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${PUUID}`,
+    );
+  });
+
   it("#25 S2 lists Solo/Duo and Flex games of the last 30 days, routed to europe for EUW", async () => {
     const since = new Date(Date.UTC(2026, 9, 1));
     const { fetch, requests } = fakeFetch(

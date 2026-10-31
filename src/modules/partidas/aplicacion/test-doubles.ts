@@ -6,19 +6,53 @@ import type { RiotAccount, RiotApi } from "./riot-port";
 
 export function inMemoryAccounts(): RiotAccountRepository & { verify(userId: string): void } {
   const byUser = new Map<string, LinkedAccount>();
+  const update = (userId: string, changes: Partial<LinkedAccount>) => {
+    const account = byUser.get(userId);
+    if (account) byUser.set(userId, { ...account, ...changes });
+  };
   return {
     async findByUser(userId) {
       return byUser.get(userId) ?? null;
     },
     async link(userId, account) {
       if (byUser.has(userId)) return { status: "already-linked" };
-      const linked = { ...account, id: `account-${userId}`, verified: false };
+      const linked: LinkedAccount = {
+        ...account,
+        id: `account-${userId}`,
+        verified: false,
+        challengeIconId: null,
+        challengeSetAt: null,
+        lastCheckAt: null,
+      };
       byUser.set(userId, linked);
       return { status: "linked", account: linked };
     },
-    verify(userId) {
+    async setChallengeIcon(userId, iconId, at, ttlSeconds) {
       const account = byUser.get(userId);
-      if (account) byUser.set(userId, { ...account, verified: true });
+      if (!account || account.verified) return null;
+      const expired =
+        !account.challengeSetAt ||
+        at.getTime() - account.challengeSetAt.getTime() >= ttlSeconds * 1000;
+      if (expired) update(userId, { challengeIconId: iconId, challengeSetAt: at });
+      return byUser.get(userId)?.challengeIconId ?? null;
+    },
+    async tryRecordCheck(userId, at, intervalSeconds) {
+      const last = byUser.get(userId)?.lastCheckAt;
+      if (last && at.getTime() - last.getTime() < intervalSeconds * 1000) return false;
+      update(userId, { lastCheckAt: at });
+      return true;
+    },
+    async markVerified(userId) {
+      const account = byUser.get(userId);
+      const claimed = [...byUser.values()].some(
+        (other) => other !== account && other.verified && other.puuid === account?.puuid,
+      );
+      if (claimed) return "claimed";
+      update(userId, { verified: true });
+      return "verified";
+    },
+    verify(userId) {
+      update(userId, { verified: true });
     },
   };
 }
@@ -28,6 +62,11 @@ export function inMemoryMatches(): MatchRepository {
   return {
     async storedMatchIds(userId, riotAccountId) {
       return new Set(stored.get(`${userId}/${riotAccountId}`)?.keys());
+    },
+    async countForUser(userId) {
+      let total = 0;
+      for (const [key, games] of stored) if (key.startsWith(`${userId}/`)) total += games.size;
+      return total;
     },
     async save(userId, riotAccountId, matches) {
       const key = `${userId}/${riotAccountId}`;
@@ -46,11 +85,16 @@ export function inMemoryMatches(): MatchRepository {
 
 type Call =
   | { method: "findAccount"; gameName: string; tagLine: string; region: Region }
+  | { method: "profileIconId"; puuid: string; region: Region }
   | { method: "rankedMatchIds"; puuid: string; region: Region; since: Date }
   | { method: "rankedMatch"; matchId: string };
 
 /** A Riot that knows some accounts and games, records calls and can fail on demand. */
-export function riotWith(data: { accounts: RiotAccount[]; games?: RankedMatch[] }) {
+export function riotWith(data: {
+  accounts: RiotAccount[];
+  games?: RankedMatch[];
+  icons?: Record<string, number>;
+}) {
   const calls: Call[] = [];
   const extraIds: string[] = [];
   let matchFailure: { after: number; error: Error } | null = null;
@@ -59,6 +103,10 @@ export function riotWith(data: { accounts: RiotAccount[]; games?: RankedMatch[] 
     async findAccount({ gameName, tagLine }, region) {
       calls.push({ method: "findAccount", gameName, tagLine, region });
       return data.accounts.find((a) => a.gameName === gameName && a.tagLine === tagLine) ?? null;
+    },
+    async profileIconId(puuid, region) {
+      calls.push({ method: "profileIconId", puuid, region });
+      return data.icons?.[puuid] ?? null;
     },
     async rankedMatchIds(puuid, region, since) {
       calls.push({ method: "rankedMatchIds", puuid, region, since });

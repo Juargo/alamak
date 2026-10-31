@@ -86,6 +86,74 @@ describe.runIf(isLocal)("partidas repositories (integration)", () => {
     expect(await accounts.findByUser(BETO)).toBeNull();
   });
 
+  it("#26 S2 marks the account verified and keeps the challenge icon and last check", async () => {
+    const accounts = postgresRiotAccountRepository(db);
+    await accounts.link(ANA, ACCOUNT);
+    const at = new Date("2026-10-31T12:00:00Z");
+
+    await accounts.setChallengeIcon(ANA, 3, at, 900);
+    await accounts.tryRecordCheck(ANA, at, 20);
+    const outcome = await accounts.markVerified(ANA, at);
+
+    expect(outcome).toBe("verified");
+    expect(await accounts.findByUser(ANA)).toMatchObject({
+      verified: true,
+      challengeIconId: 3,
+      lastCheckAt: at,
+    });
+  });
+
+  it("#26 only one player can verify the same Riot account", async () => {
+    const accounts = postgresRiotAccountRepository(db);
+    await accounts.link(ANA, ACCOUNT);
+    await accounts.link(BETO, ACCOUNT);
+    await accounts.markVerified(BETO, new Date());
+
+    expect(await accounts.markVerified(ANA, new Date())).toBe("claimed");
+    expect((await accounts.findByUser(ANA))?.verified).toBe(false);
+  });
+
+  it("#26 a verified account keeps its challenge icon", async () => {
+    const accounts = postgresRiotAccountRepository(db);
+    await accounts.link(ANA, ACCOUNT);
+    await accounts.setChallengeIcon(ANA, 3, new Date(), 900);
+    await accounts.markVerified(ANA, new Date());
+
+    expect(
+      await accounts.setChallengeIcon(ANA, 9, new Date(Date.now() + 3_600_000), 900),
+    ).toBeNull();
+
+    expect((await accounts.findByUser(ANA))?.challengeIconId).toBe(3);
+  });
+
+  it("#26 S3 parallel checks: only one is recorded within 20 seconds", async () => {
+    const accounts = postgresRiotAccountRepository(db);
+    await accounts.link(ANA, ACCOUNT);
+    const at = new Date("2026-10-31T12:00:00Z");
+
+    const results = await Promise.all(
+      Array.from({ length: 8 }, () => accounts.tryRecordCheck(ANA, at, 20)),
+    );
+    const later = await accounts.tryRecordCheck(ANA, new Date(at.getTime() + 20_000), 20);
+
+    expect(results.filter(Boolean)).toHaveLength(1);
+    expect(later).toBe(true);
+  });
+
+  it("#26 concurrent requests agree on one icon, replaced only after it expires", async () => {
+    const accounts = postgresRiotAccountRepository(db);
+    await accounts.link(ANA, ACCOUNT);
+    const at = new Date("2026-10-31T12:00:00Z");
+
+    const icons = await Promise.all(
+      [3, 4, 5, 6].map((icon) => accounts.setChallengeIcon(ANA, icon, at, 900)),
+    );
+    const replaced = await accounts.setChallengeIcon(ANA, 9, new Date(at.getTime() + 900_000), 900);
+
+    expect(new Set(icons).size).toBe(1);
+    expect(replaced).toBe(9);
+  });
+
   it("#25 S4 stores games once: a second import does not duplicate them", async () => {
     const accounts = postgresRiotAccountRepository(db);
     const matches = postgresMatchRepository(db);
