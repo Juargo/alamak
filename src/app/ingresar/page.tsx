@@ -6,16 +6,13 @@ import { signInWith } from "./actions";
 
 export const metadata: Metadata = {
   title: "Ingresar · Alamak",
-  description: "Entra a tu diario de ranked con Discord o Google, sin contraseña.",
+  description: "Entra a tu diario de ranked con tu cuenta de Google, sin contraseña.",
 };
 
 // Session pages render per request: they redirect before showing anything.
 export const instant = false;
 
-const PROVIDERS = [
-  { id: "discord", label: "Continuar con Discord" },
-  { id: "google", label: "Continuar con Google" },
-] as const;
+const PROVIDERS = [{ id: "google", label: "Continuar con Google" }] as const;
 
 export default async function SignInPage({ searchParams }: PageProps<"/ingresar">) {
   if (await getCurrentUser()) redirect(DIARY_PATH);
@@ -28,7 +25,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/ingresar"
           Entra a tu diario
         </h1>
         <p className="text-cuerpo-l text-texto-secundario">
-          Sin contraseña: usa la cuenta que ya tienes en Discord o Google.
+          Sin contraseña: usa la cuenta que ya tienes en Google.
         </p>
       </header>
 
@@ -37,8 +34,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/ingresar"
           role="alert"
           className="rounded-md border border-borde-defecto bg-fondo-superficie p-4 text-cuerpo-m"
         >
-          No pudimos completar el ingreso. Vuelve a intentarlo; si usas Discord, revisa que tu
-          correo esté verificado allí.
+          No pudimos completar el ingreso. Vuelve a intentarlo.
         </p>
       ) : null}
 

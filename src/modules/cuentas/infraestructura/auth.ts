@@ -11,7 +11,7 @@ const DAY_IN_SECONDS = 60 * 60 * 24;
 
 /**
  * Better Auth settings shared by the app and the test-only instance (ADR-0017).
- * Passwordless: Discord and Google; the email link waits for the own domain (#21).
+ * Passwordless sign-in with Google; Discord and the email link are planned for later.
  */
 export function authOptions(db: NodePgDatabase = getDb()): BetterAuthOptions {
   const env = getAuthEnv();
@@ -21,12 +21,20 @@ export function authOptions(db: NodePgDatabase = getDb()): BetterAuthOptions {
     baseURL: env.BETTER_AUTH_URL,
     database: drizzleAdapter(db, { provider: "pg", schema }),
     emailAndPassword: { enabled: false },
+    // Endpoints the app does not offer: players cannot rename themselves, change email,
+    // delete the account or link providers through the raw API (deletion comes with #35).
+    disabledPaths: [
+      "/update-user",
+      "/change-email",
+      "/delete-user",
+      "/link-social",
+      "/unlink-account",
+    ],
     socialProviders: {
-      discord: { clientId: env.DISCORD_CLIENT_ID, clientSecret: env.DISCORD_CLIENT_SECRET },
       google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET },
     },
-    // A provider may only join an existing account when both emails are verified, so an
-    // unverified Discord email cannot take over someone else's Google account.
+    // A provider may only join an existing account when both emails are verified, so a future
+    // provider with an unverified email cannot take over someone else's account.
     account: { accountLinking: { enabled: true, requireLocalEmailVerified: true } },
     databaseHooks: {
       user: {

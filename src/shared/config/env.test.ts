@@ -3,8 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const AUTH_ENV = {
   BETTER_AUTH_SECRET: "test-secret-with-at-least-32-characters!",
   BETTER_AUTH_URL: "https://alamak.example",
-  DISCORD_CLIENT_ID: "discord-id",
-  DISCORD_CLIENT_SECRET: "discord-secret",
   GOOGLE_CLIENT_ID: "google-id",
   GOOGLE_CLIENT_SECRET: "google-secret",
 };

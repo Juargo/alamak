@@ -32,8 +32,6 @@ describe.runIf(isLocal)("auth sessions (integration)", () => {
     Object.assign(process.env, {
       BETTER_AUTH_SECRET: "test-secret-with-at-least-32-characters!",
       BETTER_AUTH_URL: "https://alamak.example",
-      DISCORD_CLIENT_ID: "discord-id",
-      DISCORD_CLIENT_SECRET: "discord-secret",
       GOOGLE_CLIENT_ID: "google-id",
       GOOGLE_CLIENT_SECRET: "google-secret",
     });
@@ -82,6 +80,24 @@ describe.runIf(isLocal)("auth sessions (integration)", () => {
     expect(renewed?.session.expiresAt.getTime()).toBeGreaterThan(Date.now() + 7 * DAY_MS - 60_000);
     const [stored] = await db.select().from(sessionTable).where(eq(sessionTable.id, session.id));
     expect(stored.expiresAt.getTime()).toBeGreaterThan(Date.now() + 7 * DAY_MS - 60_000);
+  });
+
+  it("#23 the raw API does not let a player rename, delete or relink the account", async () => {
+    const { test, player } = await signedInPlayer();
+    const headers = await test.getAuthHeaders({ userId: player.id });
+
+    for (const path of ["/update-user", "/change-email", "/delete-user", "/link-social"]) {
+      const response = await auth.handler(
+        new Request(`https://alamak.example/api/auth${path}`, {
+          method: "POST",
+          headers: { ...Object.fromEntries(headers), "content-type": "application/json" },
+          body: JSON.stringify({ name: "Otro", newEmail: "otro@example.com", provider: "google" }),
+        }),
+      );
+      expect(response.status, path).toBe(404);
+    }
+    const [stored] = await db.select().from(user);
+    expect(stored).toMatchObject({ name: "Ana", email: "ana@example.com" });
   });
 
   it("#23 rate limiting counts requests in the database and rejects the excess", async () => {

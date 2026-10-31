@@ -28,7 +28,8 @@ export async function requireUser(): Promise<CurrentUser> {
   return user;
 }
 
-export const SIGN_IN_PROVIDERS = ["discord", "google"] as const;
+// Discord and the email link are planned for later (#23 follow-up).
+export const SIGN_IN_PROVIDERS = ["google"] as const;
 export type SignInProvider = (typeof SIGN_IN_PROVIDERS)[number];
 
 export function isSignInProvider(value: unknown): value is SignInProvider {
@@ -56,7 +57,15 @@ export async function signOut(): Promise<void> {
 /** Ends every session of the signed-in user, on all devices. */
 export async function signOutEverywhere(): Promise<void> {
   const requestHeaders = await headers();
-  await getAuth().api.revokeSessions({ headers: requestHeaders });
-  // The current session is already revoked; this also clears its cookie.
+  // A page left open after signing out elsewhere has no session left to revoke.
+  if (await getAuth().api.getSession({ headers: requestHeaders })) {
+    await getAuth().api.revokeSessions({ headers: requestHeaders });
+  }
+  // Clears this device's cookie in every case.
   await getAuth().api.signOut({ headers: requestHeaders });
+}
+
+/** Checks the session of a request outside React (the proxy), renewing it when due. */
+export async function hasSession(requestHeaders: Headers): Promise<boolean> {
+  return (await getAuth().api.getSession({ headers: requestHeaders })) !== null;
 }

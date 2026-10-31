@@ -37,7 +37,7 @@ export const session = pgTable(
   (table) => [index("sessions_user_id_idx").on(table.userId)],
 );
 
-/** Linked sign-in providers (Discord, Google). Never holds a password. */
+/** Linked sign-in providers (Google for now). Never holds a password. */
 export const account = pgTable(
   "accounts",
   {

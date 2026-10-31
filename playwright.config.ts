@@ -5,13 +5,11 @@ const port = 3200;
 export const ANALYTICS_HOST = "http://127.0.0.1:3299";
 export const BASE_URL = `http://127.0.0.1:${port}`;
 
-// Fake sign-in settings: E2E never reaches Discord or Google, and creates sessions with
+// Fake sign-in settings: E2E never reaches Google, and creates sessions with
 // the same secret (e2e/auth.ts).
 export const E2E_AUTH = {
   BETTER_AUTH_SECRET: "e2e-secret-with-at-least-32-characters!",
   BETTER_AUTH_URL: BASE_URL,
-  DISCORD_CLIENT_ID: "e2e-discord-id",
-  DISCORD_CLIENT_SECRET: "e2e-discord-secret",
   GOOGLE_CLIENT_ID: "e2e-google-id",
   GOOGLE_CLIENT_SECRET: "e2e-google-secret",
 };

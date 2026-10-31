@@ -9,7 +9,7 @@ import * as schema from "../src/modules/cuentas/infraestructura/schema";
 import { testDatabaseUrl } from "./db";
 
 // Test-only Better Auth instance: same database and secret as the app under test, plus
-// testUtils to create players and sessions without going through Discord or Google.
+// testUtils to create players and sessions without going through Google.
 let pool: Pool | undefined;
 
 function testAuth() {
@@ -32,10 +32,23 @@ export async function createPlayer(email: string, name: string): Promise<string>
   return player.id;
 }
 
-/** Signs the player in on this browser, as a new device. */
-export async function signIn(context: BrowserContext, userId: string): Promise<void> {
+/**
+ * Signs the player in on this browser, as a new device. With `remainingDays`, the session
+ * and its cookie look as if they were created earlier and expire in that many days.
+ */
+export async function signIn(
+  context: BrowserContext,
+  userId: string,
+  options: { remainingDays?: number } = {},
+): Promise<void> {
   const test = (await auth.$context).test;
-  await context.addCookies(await test.getCookies({ userId, domain: "127.0.0.1" }));
+  const cookies = await test.getCookies({ userId, domain: "127.0.0.1" });
+  if (options.remainingDays !== undefined) {
+    const expires = new Date(Date.now() + options.remainingDays * 24 * 60 * 60 * 1000);
+    await pool!.query("update sessions set expires_at = $1 where user_id = $2", [expires, userId]);
+    for (const cookie of cookies) cookie.expires = Math.floor(expires.getTime() / 1000);
+  }
+  await context.addCookies(cookies);
 }
 
 export async function deletePlayer(userId: string): Promise<void> {

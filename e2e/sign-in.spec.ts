@@ -26,6 +26,25 @@ test.afterEach(async () => {
   await deletePlayer(playerId);
 });
 
+test("#23 S5: the diary answers a visitor without a session with a redirect, not a page", async ({
+  request,
+}) => {
+  const response = await request.get("/diario", { maxRedirects: 0 });
+
+  expect(response.status()).toBe(307);
+  expect(response.headers().location).toMatch(/\/ingresar$/);
+});
+
+test("#23 S4: using the diary renews the session cookie to 7 days", async ({ page, context }) => {
+  await signIn(context, playerId, { remainingDays: 5 });
+
+  await page.goto("/diario");
+
+  const cookie = (await context.cookies()).find((c) => c.name.endsWith("session_token"));
+  const sixDaysFromNow = Date.now() / 1000 + 6 * 24 * 60 * 60;
+  expect(cookie?.expires).toBeGreaterThan(sixDaysFromNow);
+});
+
 test("#23 S5: the diary sends a visitor without a session to the sign-in page", async ({
   page,
 }) => {
@@ -36,30 +55,29 @@ test("#23 S5: the diary sends a visitor without a session to the sign-in page", 
   await expectNoSeriousA11yIssues(page);
 });
 
-for (const provider of [
-  { name: "Discord", id: "discord", host: "https://discord.com/**" },
-  { name: "Google", id: "google", host: "https://accounts.google.com/**" },
-]) {
-  test(`#23 S1: "Continuar con ${provider.name}" opens ${provider.name} sign-in for Alamak`, async ({
-    page,
-  }) => {
-    let authorizeUrl: URL | undefined;
-    await page.route(provider.host, async (route) => {
-      authorizeUrl = new URL(route.request().url());
-      await route.fulfill({ body: "provider sign-in" });
-    });
-    await page.goto("/ingresar");
-
-    await page.getByRole("button", { name: `Continuar con ${provider.name}` }).click();
-
-    await expect
-      .poll(() => authorizeUrl?.searchParams.get("redirect_uri"))
-      .toBe(`${E2E_AUTH.BETTER_AUTH_URL}/api/auth/callback/${provider.id}`);
-    expect(authorizeUrl?.searchParams.get("client_id")).toBe(
-      provider.id === "discord" ? E2E_AUTH.DISCORD_CLIENT_ID : E2E_AUTH.GOOGLE_CLIENT_ID,
-    );
+test('#23 S1: "Continuar con Google" opens Google sign-in for Alamak', async ({ page }) => {
+  let authorizeUrl: URL | undefined;
+  await page.route("https://accounts.google.com/**", async (route) => {
+    authorizeUrl = new URL(route.request().url());
+    await route.fulfill({ body: "provider sign-in" });
   });
-}
+  await page.goto("/ingresar");
+
+  await page.getByRole("button", { name: "Continuar con Google" }).click();
+
+  await expect
+    .poll(() => authorizeUrl?.searchParams.get("redirect_uri"))
+    .toBe(`${E2E_AUTH.BETTER_AUTH_URL}/api/auth/callback/google`);
+  expect(authorizeUrl?.searchParams.get("client_id")).toBe(E2E_AUTH.GOOGLE_CLIENT_ID);
+});
+
+test("#23 S1: Google is the only way to sign in for now", async ({ page }) => {
+  await page.goto("/ingresar");
+
+  await expect(page.getByRole("button", { name: /^Continuar con/ })).toHaveText([
+    "Continuar con Google",
+  ]);
+});
 
 test("#23 S6: a signed-in player sees the diary with the Riot Games notice", async ({
   page,
@@ -112,6 +130,11 @@ test("#23 S3: signing out everywhere also ends the session on other devices", as
   await page.getByRole("button", { name: "Cerrar sesión en todos los dispositivos" }).click();
 
   await expect(page).toHaveURL(/\/ingresar$/);
+  // The page left open on the other device, whose cookie has since expired, can still use
+  // the button without an error.
+  await otherDevice.clearCookies();
+  await otherPage.getByRole("button", { name: "Cerrar sesión en todos los dispositivos" }).click();
+  await expect(otherPage).toHaveURL(/\/ingresar$/);
   await otherPage.goto("/diario");
   await expect(otherPage).toHaveURL(/\/ingresar$/);
   await otherDevice.close();
