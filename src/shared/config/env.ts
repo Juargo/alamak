@@ -51,3 +51,25 @@ export function getAuthEnv(): AuthEnv {
   cachedAuth = result.data;
   return cachedAuth;
 }
+
+const riotEnvSchema = z.object({
+  RIOT_API_KEY: z.string().startsWith("RGAPI-"),
+  // Only for E2E, which talks to a local fake Riot.
+  RIOT_API_BASE_URL: z.url().optional(),
+});
+
+export type RiotEnv = z.infer<typeof riotEnvSchema>;
+
+let cachedRiot: RiotEnv | undefined;
+
+/** Riot API key (server only, RNF-29), validated apart so other pages work without it. */
+export function getRiotEnv(): RiotEnv {
+  if (cachedRiot) return cachedRiot;
+  const result = riotEnvSchema.safeParse(process.env);
+  if (!result.success) {
+    const missing = result.error.issues.map((issue) => issue.path.join(".")).join(", ");
+    throw new Error(`Invalid Riot environment variables: ${missing}`);
+  }
+  cachedRiot = result.data;
+  return cachedRiot;
+}
