@@ -53,6 +53,11 @@ export function inMemoryMatches(): MatchRepository {
     async storedMatchIds(userId, riotAccountId) {
       return new Set(stored.get(`${userId}/${riotAccountId}`)?.keys());
     },
+    async countForUser(userId) {
+      let total = 0;
+      for (const [key, games] of stored) if (key.startsWith(`${userId}/`)) total += games.size;
+      return total;
+    },
     async save(userId, riotAccountId, matches) {
       const key = `${userId}/${riotAccountId}`;
       const games = stored.get(key) ?? new Map<string, RankedMatch>();

@@ -6,5 +6,10 @@ export function championIconUrl(gameVersion: string, championName: string): stri
   return `${DATA_DRAGON}/cdn/${gameVersion}/img/champion/${encodeURIComponent(championName)}.png`;
 }
 
+/** A player's profile icon, e.g. the one they must set to prove ownership. */
+export function profileIconUrl(gameVersion: string, iconId: number): string {
+  return `${DATA_DRAGON}/cdn/${gameVersion}/img/profileicon/${iconId}.png`;
+}
+
 /** Data Dragon lists versions newest first. */
 export const DATA_DRAGON_VERSIONS_URL = `${DATA_DRAGON}/api/versions.json`;

@@ -6,6 +6,14 @@ import {
   type ImportResult,
 } from "./aplicacion/import-recent-matches";
 import { linkRiotAccount as linkWith, type LinkResult } from "./aplicacion/link-riot-account";
+import {
+  checkOwnership as checkWith,
+  startOwnershipCheck as startWith,
+  type CheckResult,
+  type StartResult,
+} from "./aplicacion/verify-riot-account";
+import { profileIconUrl } from "./dominio/data-dragon";
+import { latestDataDragonVersion } from "./infraestructura/data-dragon-version";
 import type { LinkedAccount } from "./aplicacion/repositories";
 import {
   postgresMatchRepository,
@@ -16,6 +24,7 @@ import { createRiotHttpApi } from "./infraestructura/riot-http-api";
 export type { ImportResult } from "./aplicacion/import-recent-matches";
 export type { LinkResult } from "./aplicacion/link-riot-account";
 export type { LinkedAccount } from "./aplicacion/repositories";
+export type { CheckResult, StartResult } from "./aplicacion/verify-riot-account";
 export { formatRiotId } from "./dominio/riot-id";
 
 // Every function takes the player's id from the server session (ADR-0017), never the client.
@@ -48,4 +57,23 @@ export function importRecentMatches(userId: string): Promise<ImportResult> {
     matches: postgresMatchRepository(db),
     riot: riot(),
   })(userId);
+}
+
+/** The icon the player must set to prove the linked account is theirs (#26). */
+export function startOwnershipCheck(userId: string): Promise<StartResult> {
+  return startWith({ accounts: postgresRiotAccountRepository(getDb()), riot: riot() })(userId);
+}
+
+/** "Ya lo cambié": verifies the account if the player set the icon (one try per 20 s). */
+export function checkOwnership(userId: string): Promise<CheckResult> {
+  return checkWith({ accounts: postgresRiotAccountRepository(getDb()), riot: riot() })(userId);
+}
+
+export function countStoredMatches(userId: string): Promise<number> {
+  return postgresMatchRepository(getDb()).countForUser(userId);
+}
+
+/** `DATA_DRAGON_VERSION` pins the version (E2E, offline); otherwise the latest is used. */
+export async function profileIconImage(iconId: number): Promise<string> {
+  return profileIconUrl(await latestDataDragonVersion(process.env.DATA_DRAGON_VERSION), iconId);
 }

@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNull } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type {
   LinkedAccount,
@@ -80,6 +80,14 @@ export function postgresMatchRepository(db: NodePgDatabase): MatchRepository {
         .from(riotMatches)
         .where(and(eq(riotMatches.userId, userId), eq(riotMatches.riotAccountId, riotAccountId)));
       return new Set(rows.map((row) => row.matchId));
+    },
+
+    async countForUser(userId) {
+      const [row] = await db
+        .select({ total: count() })
+        .from(riotMatches)
+        .where(eq(riotMatches.userId, userId));
+      return row?.total ?? 0;
     },
 
     async save(userId, riotAccountId, matches) {

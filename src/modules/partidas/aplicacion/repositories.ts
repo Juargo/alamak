@@ -29,6 +29,8 @@ export interface RiotAccountRepository {
 export interface MatchRepository {
   /** Ids of this account's games already stored, to skip them. */
   storedMatchIds(userId: string, riotAccountId: string): Promise<Set<string>>;
+  /** How many games the player has stored. */
+  countForUser(userId: string): Promise<number>;
   /** Stores the games; ones already stored are left untouched. Returns how many were new. */
   save(userId: string, riotAccountId: string, matches: RankedMatch[]): Promise<number>;
 }
