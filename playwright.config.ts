@@ -3,6 +3,18 @@ import { testDatabaseUrl } from "./e2e/db";
 
 const port = 3200;
 export const ANALYTICS_HOST = "http://127.0.0.1:3299";
+export const BASE_URL = `http://127.0.0.1:${port}`;
+
+// Fake sign-in settings: E2E never reaches Discord or Google, and creates sessions with
+// the same secret (e2e/auth.ts).
+export const E2E_AUTH = {
+  BETTER_AUTH_SECRET: "e2e-secret-with-at-least-32-characters!",
+  BETTER_AUTH_URL: BASE_URL,
+  DISCORD_CLIENT_ID: "e2e-discord-id",
+  DISCORD_CLIENT_SECRET: "e2e-discord-secret",
+  GOOGLE_CLIENT_ID: "e2e-google-id",
+  GOOGLE_CLIENT_SECRET: "e2e-google-secret",
+};
 
 // The app writes sign-ups to this database, so E2E only runs against a local, disposable one.
 // Checked here too: the web server may start before the global setup runs.
@@ -17,7 +29,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["list"]] : "list",
   use: {
-    baseURL: `http://127.0.0.1:${port}`,
+    baseURL: BASE_URL,
     trace: "retain-on-failure",
   },
   projects: [
@@ -27,7 +39,7 @@ export default defineConfig({
   ],
   webServer: {
     command: `pnpm build && pnpm start --port ${port}`,
-    url: `http://127.0.0.1:${port}`,
+    url: BASE_URL,
     timeout: 180_000,
     reuseExistingServer: false,
     env: {
@@ -35,6 +47,7 @@ export default defineConfig({
       // Analytics on, pointed at a local address that only the analytics test intercepts.
       NEXT_PUBLIC_POSTHOG_KEY: "phc_e2e",
       NEXT_PUBLIC_POSTHOG_HOST: ANALYTICS_HOST,
+      ...E2E_AUTH,
     },
   },
 });
