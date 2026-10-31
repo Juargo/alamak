@@ -21,6 +21,9 @@ El registro completo de D-01 a D-16 **no está en el repo ni en Obsidian**. Solo
 | D-20 | Acepta A-37 y resuelve C-19: la lista de espera guarda solo correo y región, se borra a los 6 meses; el resultado del test dice "Si te inscribes, te avisamos cuando empiece la beta" | ADR-0015; issue #2 |
 | D-21 | Resuelve C-16: lanzamiento objetivo el 30-jun-2027, beta en el 2º trimestre de 2027 | ADR-0015; issue #2 |
 | D-22 | Resuelve C-18: la landing dice "Te avisamos cuando empiece la beta" | ADR-0015; issue #2 |
+| D-23 | Responde P-06: tags predefinidos iniciales en tres grupos. *Cómo llegué*: Cansado, Distraído, Venía de una derrota, Fuera de mi pool. *El equipo*: Buena comunicación, Roces en el chat, Jugué en dúo. *La partida*: Draft difícil, Mal inicio, Remontada, Jugué por objetivos, Partida larga | Issue #22 |
+| D-24 | Responde P-10: una cuenta sin iniciar sesión ni anotar durante 24 meses se borra por completo, con aviso por correo 30 días antes | Issue #22 |
+| D-25 | Autenticación de jugadores con Better Auth sobre Neon; aislamiento por `user_id` obligatorio en los casos de uso en lugar de la RLS de Supabase | ADR-0017; issue #22 |
 
 Faltan D-04, D-05, D-07, D-12, D-13, D-15 y D-16, y el contenido de D-01 y D-06. Ver P-08.
 
@@ -62,9 +65,9 @@ En los Flujos 2 y 4 a 9, el encabezado repite "D-09" o "D-10". Puede ser un enca
 
 | ID | Pregunta | Bloquea |
 |---|---|---|
-| P-06 | Lista inicial de tags predefinidos | M3 (reflexión) |
+| P-06 | Lista inicial de tags predefinidos | Respondida por D-23 |
 | P-07 | Edad mínima | Respondida por A-11; revisar con abogado para Chile, México y Argentina |
 | P-08 | Traer al repo el registro completo de D-01 a D-16 | Trazabilidad de todos los issues |
 | P-09 | Qué significa éxito personal (ingreso, portafolio, aprendizaje) y cuánto pesa cada uno | Reglas de decisión |
-| P-10 | Plazo de conservación de cuentas inactivas | Política de privacidad de la app (M3) |
+| P-10 | Plazo de conservación de cuentas inactivas | Respondida por D-24 |
 | P-11 | Estado del proyecto que aplazaría la Ley 21.719 | Cumplimiento |

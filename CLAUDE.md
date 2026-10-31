@@ -3,7 +3,7 @@
 Diario de ranked en español para League of Legends: el jugador anota en 30 segundos cómo se sintió después de cada partida y cada lunes recibe los patrones que le están costando LP.
 
 ## Estado
-Fase de **validación de demanda** (camino 1): primero landing con test de tilt, lista de espera y pre-venta (M1 y M2). El diario y el resumen semanal (M3 y M4) se construyen solo si hay señal.
+Construcción del **diario (M3)**, sprints 3 a 10. Desde el 30-10-2026 se salta la validación previa: la landing con lista de espera ya está en producción, y el test de tilt, el correo de confirmación y la pre-venta (M1 y M2) quedan para los sprints 11 y 12. El resumen semanal (M4) va después del diario. Abrir el diario a otros jugadores requiere la clave de producción de Riot.
 
 ## Cómo trabajar en este repo
 - Un desarrollador a tiempo parcial (~2 h/semana). Los issues son la especificación: si algo no está en el issue, pregunta en un comentario en vez de suponer.
