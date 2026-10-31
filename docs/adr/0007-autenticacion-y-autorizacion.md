@@ -7,6 +7,8 @@
 
 > **Nota (2026-10-28):** lo que este ADR decide sobre Supabase está reemplazado por [ADR-0014](0014-neon-como-base-de-datos.md) (Neon), por falta de presupuesto. El resto sigue vigente.
 
+> **Nota (2026-10-30):** el proveedor de autenticación de jugadores y el reemplazo de la RLS de Supabase se deciden en [ADR-0017](0017-autenticacion-con-better-auth.md) (Better Auth).
+
 ## Contexto
 - En la validación, el visitante **no inicia sesión** (Flujo 10): deja su correo, hace el test de tilt y paga la pre-venta.
 - El producto tiene roles (free, premium, coach, admin; DI-01) y aislamiento estricto por usuario (RNF-12, DI-14).

@@ -13,7 +13,7 @@ Un archivo por decisión: `NNNN-titulo-corto.md`, basado en [`0000-plantilla.md`
 | [0004](0004-mantenibilidad-y-escalabilidad.md) | Mantenible y escalable | TS estricto, límites verificados, proveedores detrás de puertos; escala serverless + caché y lotes | Aceptado |
 | [0005](0005-base-de-datos.md) | Base de datos | Solo PostgreSQL (ACID) con RLS; sin NoSQL ni base vectorial; `supabase-js` en vez de Prisma | Aceptado; Supabase reemplazado por 0014 |
 | [0006](0006-estilo-de-api.md) | API | REST `/api/v1` + Server Actions; sin WebSocket; Web Push para avisos | Aceptado |
-| [0007](0007-autenticacion-y-autorizacion.md) | Authn / Authz | Supabase Auth sin contraseña (OTP, Discord, Google); RBAC + RLS; MFA para admin | Aceptado / login de jugadores Propuesto; Supabase Auth reemplazado por 0014 (proveedor por decidir) |
+| [0007](0007-autenticacion-y-autorizacion.md) | Authn / Authz | Supabase Auth sin contraseña (OTP, Discord, Google); RBAC + RLS; MFA para admin | Aceptado / login de jugadores Propuesto; proveedor y aislamiento en 0017 |
 | [0008](0008-stack-tecnologico.md) | Tecnologías | Next.js, Tailwind, shadcn/ui, Supabase, Resend, PostHog, Sentry; IA por definir | Aceptado; Supabase reemplazado por 0014 |
 | [0009](0009-pagos-merchant-of-record.md) | Pagos | Lemon Squeezy como Merchant of Record (Paddle de alternativa) | Aceptado, con verificaciones pendientes |
 | [0010](0010-ci-cd.md) | CI/CD | GitHub Actions (≤ 10 min) + Vercel Git; migraciones *expand/contract*; respaldo propio | Aceptado |
@@ -23,12 +23,14 @@ Un archivo por decisión: `NNNN-titulo-corto.md`, basado en [`0000-plantilla.md`
 | [0014](0014-neon-como-base-de-datos.md) | Base de datos | Postgres en Neon (reemplaza a Supabase en todos los ADR); `pg` + pool con Fluid compute; región Ohio hasta #7 | Aceptado |
 | [0015](0015-decisiones-de-captacion-y-pre-venta.md) | Captación y pre-venta | Test con "Esta cuenta es mía" y un dato agregado; pre-venta CLP 14.990 / US$10,99 / €17,99; garantía hasta el 30-sep-2027; lista de espera solo correo y región; lanzamiento 30-jun-2027 | Aceptado |
 | [0016](0016-drizzle-y-migraciones.md) | Drizzle y migraciones | Esquema y consultas con Drizzle; migraciones SQL en `drizzle/` aplicadas por `migrate.yml`; Preview usa la rama fija `preview` de Neon | Aceptado |
+| [0017](0017-autenticacion-con-better-auth.md) | Autenticación de jugadores | Better Auth sobre Neon (Discord, Google y enlace al correo); aislamiento por `user_id` obligatorio en casos de uso, RLS más adelante | Aceptado |
 
 ## Pendientes que abren o cierran ADRs
 - [ ] Verificar las condiciones de Lemon Squeezy para un vendedor en Chile (ADR-0009) antes del issue #9.
 - [ ] Pasar a Vercel Pro antes de activar la pre-venta (ADR-0003).
 - [ ] Elegir el proveedor de IA (ADR-0008) antes de M4.
-- [ ] Elegir la autenticación de jugadores, el almacenamiento y la cola sin Supabase (ADR-0014) antes de M3.
+- [x] Elegir la autenticación de jugadores sin Supabase (ADR-0017).
+- [ ] Elegir el almacenamiento y la cola sin Supabase (ADR-0014) antes de #27 y #34.
 - [ ] Revisar la región de Neon (Ohio frente a `gru1`) antes de lanzar el test de tilt, #7 (ADR-0014).
 - [ ] Firmar el DPA de Neon antes de recibir datos de usuarios de España (ADR-0014).
 - [ ] Revisar todos los ADR *Propuestos* en la planificación posterior al GO.
