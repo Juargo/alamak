@@ -86,6 +86,44 @@ describe.runIf(isLocal)("partidas repositories (integration)", () => {
     expect(await accounts.findByUser(BETO)).toBeNull();
   });
 
+  it("#26 S2 marks the account verified and keeps the challenge icon and last check", async () => {
+    const accounts = postgresRiotAccountRepository(db);
+    await accounts.link(ANA, ACCOUNT);
+    const at = new Date("2026-10-31T12:00:00Z");
+
+    await accounts.setChallengeIcon(ANA, 3);
+    await accounts.recordCheck(ANA, at);
+    const outcome = await accounts.markVerified(ANA, at);
+
+    expect(outcome).toBe("verified");
+    expect(await accounts.findByUser(ANA)).toMatchObject({
+      verified: true,
+      challengeIconId: 3,
+      lastCheckAt: at,
+    });
+  });
+
+  it("#26 only one player can verify the same Riot account", async () => {
+    const accounts = postgresRiotAccountRepository(db);
+    await accounts.link(ANA, ACCOUNT);
+    await accounts.link(BETO, ACCOUNT);
+    await accounts.markVerified(BETO, new Date());
+
+    expect(await accounts.markVerified(ANA, new Date())).toBe("claimed");
+    expect((await accounts.findByUser(ANA))?.verified).toBe(false);
+  });
+
+  it("#26 a verified account keeps its challenge icon", async () => {
+    const accounts = postgresRiotAccountRepository(db);
+    await accounts.link(ANA, ACCOUNT);
+    await accounts.setChallengeIcon(ANA, 3);
+    await accounts.markVerified(ANA, new Date());
+
+    await accounts.setChallengeIcon(ANA, 9);
+
+    expect((await accounts.findByUser(ANA))?.challengeIconId).toBe(3);
+  });
+
   it("#25 S4 stores games once: a second import does not duplicate them", async () => {
     const accounts = postgresRiotAccountRepository(db);
     const matches = postgresMatchRepository(db);

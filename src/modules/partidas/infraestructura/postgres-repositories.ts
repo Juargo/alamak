@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type {
   LinkedAccount,
@@ -16,7 +16,14 @@ function toLinkedAccount(row: typeof riotAccounts.$inferSelect): LinkedAccount {
     tagLine: row.tagLine,
     region: row.region,
     verified: row.verifiedAt !== null,
+    challengeIconId: row.challengeIconId,
+    lastCheckAt: row.lastCheckAt,
   };
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  const cause = (error as { cause?: { code?: string } }).cause ?? error;
+  return (cause as { code?: string }).code === "23505";
 }
 
 export function postgresRiotAccountRepository(db: NodePgDatabase): RiotAccountRepository {
@@ -36,6 +43,31 @@ export function postgresRiotAccountRepository(db: NodePgDatabase): RiotAccountRe
       return row
         ? { status: "linked", account: toLinkedAccount(row) }
         : { status: "already-linked" };
+    },
+
+    async setChallengeIcon(userId, iconId) {
+      await db
+        .update(riotAccounts)
+        .set({ challengeIconId: iconId })
+        .where(and(eq(riotAccounts.userId, userId), isNull(riotAccounts.verifiedAt)));
+    },
+
+    async recordCheck(userId, at) {
+      await db.update(riotAccounts).set({ lastCheckAt: at }).where(eq(riotAccounts.userId, userId));
+    },
+
+    async markVerified(userId, at) {
+      try {
+        await db
+          .update(riotAccounts)
+          .set({ verifiedAt: at })
+          .where(and(eq(riotAccounts.userId, userId), isNull(riotAccounts.verifiedAt)));
+        return "verified";
+      } catch (error) {
+        // The partial unique index on puuid: someone else already proved this Riot account.
+        if (isUniqueViolation(error)) return "claimed";
+        throw error;
+      }
     },
   };
 }

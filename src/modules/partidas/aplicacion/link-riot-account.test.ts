@@ -83,6 +83,7 @@ describe("linkRiotAccount", () => {
       findAccount: async () => {
         throw error;
       },
+      profileIconId: async () => null,
       rankedMatchIds: async () => [],
       rankedMatch: async () => null,
     };
