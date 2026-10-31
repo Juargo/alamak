@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { DIARY_PATH, getCurrentUser } from "@/modules/cuentas";
+import { redirect, unstable_rethrow } from "next/navigation";
+import {
+  DIARY_PATH,
+  getCurrentUser,
+  SIGN_IN_PROVIDERS,
+  type SignInProvider,
+} from "@/modules/cuentas";
 import { signInWith } from "./actions";
+import { signInErrorMessage } from "./sign-in-errors";
 
 export const metadata: Metadata = {
   title: "Ingresar · Alamak",
@@ -12,11 +18,15 @@ export const metadata: Metadata = {
 // Session pages render per request: they redirect before showing anything.
 export const instant = false;
 
-const PROVIDERS = [{ id: "google", label: "Continuar con Google" }] as const;
+// Typed by the provider list, so adding a provider requires its button label.
+const PROVIDER_LABELS: Record<SignInProvider, string> = {
+  google: "Continuar con Google",
+};
 
 export default async function SignInPage({ searchParams }: PageProps<"/ingresar">) {
-  if (await getCurrentUser()) redirect(DIARY_PATH);
+  if (await signedInOrUnknown()) redirect(DIARY_PATH);
   const { error } = await searchParams;
+  const errorCode = Array.isArray(error) ? error[0] : error;
 
   return (
     <main className="mx-auto flex w-full max-w-[480px] flex-1 flex-col gap-8 px-4 pt-6 pb-16 md:pt-16 md:pb-24">
@@ -29,27 +39,25 @@ export default async function SignInPage({ searchParams }: PageProps<"/ingresar"
         </p>
       </header>
 
-      {error ? (
+      {errorCode ? (
         <p
           role="alert"
           className="rounded-md border border-borde-defecto bg-fondo-superficie p-4 text-cuerpo-m"
         >
-          {error === "sesion-vencida"
-            ? "Tu sesión en este dispositivo ya había terminado, así que no pudimos cerrar las demás. Ingresa de nuevo y vuelve a intentarlo."
-            : "No pudimos completar el ingreso. Vuelve a intentarlo."}
+          {signInErrorMessage(errorCode)}
         </p>
       ) : null}
 
       <form action={signInWith} className="flex flex-col gap-3">
-        {PROVIDERS.map((provider) => (
+        {SIGN_IN_PROVIDERS.map((provider) => (
           <button
-            key={provider.id}
+            key={provider}
             type="submit"
             name="provider"
-            value={provider.id}
+            value={provider}
             className="h-11 w-full cursor-pointer rounded-md border border-borde-fuerte bg-fondo-superficie px-4.5 text-etiqueta-m font-semibold"
           >
-            {provider.label}
+            {PROVIDER_LABELS[provider]}
           </button>
         ))}
       </form>
@@ -63,4 +71,15 @@ export default async function SignInPage({ searchParams }: PageProps<"/ingresar"
       </p>
     </main>
   );
+}
+
+/** Whether to skip the page; if the session cannot be read, show it so the player can retry. */
+async function signedInOrUnknown(): Promise<boolean> {
+  try {
+    return (await getCurrentUser()) !== null;
+  } catch (error) {
+    unstable_rethrow(error); // Next's own signals, such as the build marking the page dynamic.
+    console.error("session check failed on sign-in page", { error });
+    return false;
+  }
 }

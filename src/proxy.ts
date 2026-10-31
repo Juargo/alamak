@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { SIGN_IN_ERROR, signInErrorPath } from "@/app/ingresar/sign-in-errors";
 import { DIARY_PATH, hasSession, SIGN_IN_PATH } from "@/modules/cuentas";
 
 /**
@@ -7,11 +8,25 @@ import { DIARY_PATH, hasSession, SIGN_IN_PATH } from "@/modules/cuentas";
  * Server Components cannot set cookies; here Better Auth's `nextCookies` plugin writes it.
  */
 export async function proxy(request: NextRequest) {
-  const signedIn = await hasSession(request.headers);
-  // Only page loads are redirected; Server Actions (POST) handle a missing session themselves.
+  // Only diary page loads are redirected; Server Actions (POST) and the sign-in page handle
+  // a missing session themselves.
   const isPageLoad = request.method === "GET" || request.method === "HEAD";
-  const isDiary = request.nextUrl.pathname.startsWith(DIARY_PATH);
-  return signedIn || !isPageLoad || !isDiary
+  const guardsDiary = isPageLoad && request.nextUrl.pathname.startsWith(DIARY_PATH);
+
+  let signedIn: boolean;
+  try {
+    signedIn = await hasSession(request.headers);
+  } catch (error) {
+    // If the session cannot be read, the diary sends the player to sign in with a message
+    // to retry, and every other request goes on to its page.
+    console.error("session check failed in proxy", { error });
+    return guardsDiary
+      ? NextResponse.redirect(
+          new URL(signInErrorPath(SIGN_IN_PATH, SIGN_IN_ERROR.unavailable), request.url),
+        )
+      : NextResponse.next();
+  }
+  return signedIn || !guardsDiary
     ? NextResponse.next()
     : NextResponse.redirect(new URL(SIGN_IN_PATH, request.url));
 }

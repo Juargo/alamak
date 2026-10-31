@@ -86,7 +86,13 @@ describe.runIf(isLocal)("auth sessions (integration)", () => {
     const { test, player } = await signedInPlayer();
     const headers = await test.getAuthHeaders({ userId: player.id });
 
-    for (const path of ["/update-user", "/change-email", "/delete-user", "/link-social"]) {
+    for (const path of [
+      "/update-user",
+      "/change-email",
+      "/delete-user",
+      "/link-social",
+      "/unlink-account",
+    ]) {
       const response = await auth.handler(
         new Request(`https://alamak.example/api/auth${path}`, {
           method: "POST",
@@ -98,6 +104,17 @@ describe.runIf(isLocal)("auth sessions (integration)", () => {
     }
     const [stored] = await db.select().from(user);
     expect(stored).toMatchObject({ name: "Ana", email: "ana@example.com" });
+  });
+
+  it("#23 an expired or replayed Google return comes back to the sign-in page", async () => {
+    const response = await auth.handler(
+      new Request("https://alamak.example/api/auth/callback/google?state=replayed&code=x"),
+    );
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toMatch(
+      /^https:\/\/alamak\.example\/ingresar\?error=/,
+    );
   });
 
   it("#23 rate limiting counts requests in the database and rejects the excess", async () => {

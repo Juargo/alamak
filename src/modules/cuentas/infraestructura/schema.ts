@@ -37,7 +37,10 @@ export const session = pgTable(
   (table) => [index("sessions_user_id_idx").on(table.userId)],
 );
 
-/** Linked sign-in providers (Google for now). Never holds a password. */
+/**
+ * Linked sign-in providers (Google for now). Better Auth's model requires the `password`
+ * column; it stays empty because email-and-password sign-in is disabled in auth.ts.
+ */
 export const account = pgTable(
   "accounts",
   {

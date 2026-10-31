@@ -44,10 +44,15 @@ export function authOptions(db: NodePgDatabase = getDb()): BetterAuthOptions {
         },
       },
     },
-    // Stored session, 7 days, renewed at most once a day while in use.
+    // Stored session, 7 days, renewed at most once a day while in use. Its cookie is HttpOnly
+    // and SameSite=Lax by default, and Secure whenever the base URL is https.
     session: { expiresIn: 7 * DAY_IN_SECONDS, updateAge: DAY_IN_SECONDS },
-    // Cookies are HttpOnly and SameSite=Lax by default, and Secure whenever the base URL is https.
+    // Better Auth enables the limit only in production; counters live in the database
+    // because serverless functions share no memory.
     rateLimit: { storage: "database" },
+    // OAuth failures that happen before the sign-in's own error URL is known (an expired or
+    // replayed state) also return to the sign-in page, with Better Auth's error code.
+    onAPIError: { errorURL: `${env.BETTER_AUTH_URL}/ingresar` },
   };
 }
 
