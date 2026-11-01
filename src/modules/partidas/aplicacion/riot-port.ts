@@ -41,6 +41,8 @@ export function isRiotFailure(error: unknown): boolean {
 export interface RiotApi {
   /** The account behind a Riot ID on that region's server, or null when it is not there. */
   findAccount(riotId: RiotId, region: Region): Promise<RiotAccount | null>;
+  /** The profile icon the player has right now on that region's server, or null. */
+  profileIconId(puuid: string, region: Region): Promise<number | null>;
   /** Ids of the player's Solo/Duo and Flex games started since `since`. */
   rankedMatchIds(puuid: string, region: Region, since: Date): Promise<string[]>;
   /** The player's view of one game, or null if it is not a ranked game they played. */

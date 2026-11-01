@@ -50,6 +50,8 @@ export default defineConfig({
       // The app talks to a local fake Riot (e2e/fake-riot.ts), never to the real API.
       RIOT_API_KEY: "RGAPI-e2e",
       RIOT_API_BASE_URL: `http://127.0.0.1:${FAKE_RIOT_PORT}`,
+      // Fixed Data Dragon version: no call to Riot's CDN for the version list.
+      DATA_DRAGON_VERSION: "14.1.1",
     },
   },
 });

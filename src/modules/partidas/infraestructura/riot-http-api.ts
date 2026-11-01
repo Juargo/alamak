@@ -112,6 +112,13 @@ export function createRiotHttpApi(options: Options): RiotApi {
     );
   }
 
+  /** The player's summoner on the region's server, or null if they do not play there. */
+  function summoner(puuid: string, region: Region) {
+    return get<{ puuid: string; profileIconId: number }>(
+      platformUrl(region, `/lol/summoner/v4/summoners/by-puuid/${encodeURIComponent(puuid)}`),
+    );
+  }
+
   return {
     async findAccount({ gameName, tagLine }: RiotId, region) {
       const account = await get<RiotAccount>(
@@ -123,14 +130,12 @@ export function createRiotHttpApi(options: Options): RiotApi {
       if (!account) return null;
       // Riot IDs are global; the player must also exist on the chosen region's server, or
       // the import would look for their games in the wrong place.
-      const onPlatform = await get<{ puuid: string }>(
-        platformUrl(
-          region,
-          `/lol/summoner/v4/summoners/by-puuid/${encodeURIComponent(account.puuid)}`,
-        ),
-      );
-      if (!onPlatform) return null;
+      if (!(await summoner(account.puuid, region))) return null;
       return { puuid: account.puuid, gameName: account.gameName, tagLine: account.tagLine };
+    },
+
+    async profileIconId(puuid, region) {
+      return (await summoner(puuid, region))?.profileIconId ?? null;
     },
 
     async rankedMatchIds(puuid, region, since) {

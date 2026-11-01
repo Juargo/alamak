@@ -23,7 +23,7 @@ test.afterEach(async () => {
   await deletePlayer(playerId);
 });
 
-test("#25 S1 S6: linking a Riot account shows it as linked and still to be verified", async ({
+test("#25 S1 S6: linking a Riot account moves on to proving it, still unverified", async ({
   page,
 }) => {
   await page.goto("/diario");
@@ -38,9 +38,8 @@ test("#25 S1 S6: linking a Riot account shows it as linked and still to be verif
   await page.getByRole("button", { name: "Vincular cuenta" }).click();
 
   await expect(
-    page.getByRole("heading", { name: `Cuenta vinculada: ${KNOWN} (LAS)` }),
+    page.getByRole("heading", { name: `Comprueba que ${KNOWN} (LAS) es tu cuenta` }),
   ).toBeVisible();
-  await expect(page.getByText("Falta comprobar que esta cuenta es tuya.")).toBeVisible();
 });
 
 test("#25 S5: once linked, the form to link another account is gone, also after reloading", async ({
@@ -50,12 +49,12 @@ test("#25 S5: once linked, the form to link another account is gone, also after 
   await page.getByLabel("Riot ID").fill(KNOWN);
   await page.getByLabel("Región").selectOption("LAS");
   await page.getByRole("button", { name: "Vincular cuenta" }).click();
-  await expect(page.getByRole("heading", { name: /Cuenta vinculada/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Comprueba que/ })).toBeVisible();
 
   await page.reload();
 
   await expect(
-    page.getByRole("heading", { name: `Cuenta vinculada: ${KNOWN} (LAS)` }),
+    page.getByRole("heading", { name: `Comprueba que ${KNOWN} (LAS) es tu cuenta` }),
   ).toBeVisible();
   await expect(page.getByLabel("Riot ID")).toHaveCount(0);
 });
@@ -74,7 +73,7 @@ test("#25 S1: an account that plays in another region is not linked to the wrong
       "No encontramos esa cuenta en la región elegida. Revisa el nombre, el tag y la región.",
     ),
   ).toBeVisible();
-  await expect(page.getByRole("heading", { name: /Cuenta vinculada/ })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: /Comprueba que/ })).toHaveCount(0);
 });
 
 for (const [name, riotId, message] of [
@@ -104,6 +103,6 @@ for (const [name, riotId, message] of [
     await expect(page.getByText(message)).toBeVisible();
     await expect(page.getByLabel("Riot ID")).toHaveValue(riotId);
     await expect(page.getByLabel("Región")).toHaveValue("LAS");
-    await expect(page.getByRole("heading", { name: /Cuenta vinculada/ })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: /Comprueba que/ })).toHaveCount(0);
   });
 }
